@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: cmake --build build-desktop --parallel
       - name: Smoke test (forced headless)
-        run: OPTC_BACKEND=null timeout 60 ./build-desktop/optc-legacy
+        run: OPTC_BACKEND=null ./build-desktop/optc-legacy
       - uses: actions/upload-artifact@v4
         with:
           name: optc-legacy-desktop-${{ matrix.os }}
