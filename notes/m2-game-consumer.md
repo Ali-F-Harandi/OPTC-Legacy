@@ -199,3 +199,45 @@ which shares the `[4B][16-aligned]` scheme family with data1.dat and the
 protector's e2 blob.
 
 Details: `evidence/m2b-data1-e3-retest.json`.
+
+## 10. M2b addendum 2 — exhaustive stream-key sweep + the 16-bit-granular discovery
+
+A PCLMULQDQ-accelerated C sweep (`evidence/m2b_x_sweep.c`, self-tested
+against the Python reference) covered **all 2^32 values of the stream key**
+against prefix oracles (the first 4 decrypted dwords depend on the key alone),
+on both the `[4B head][body]` and full-file views:
+
+* **scatter oracle** (plaintext = `{base, n, eoff=16, doff}`, calibrated on
+  real M1b chunks): **0 hits in the entire key space**;
+* **dd70 oracle** (count/kts/total sanity, seed = f(x)): 156 raw candidates
+  = chance rate; 41/41 sampled fail the exact-cover tiling check.
+
+**data1.dat is not encrypted with the e3/stage-2 stream cipher under any
+key** — completing the requested e3-formula + e3-AES-key test with a
+definitive negative.
+
+Ciphertext-only cryptanalysis then found *what it actually is not*:
+
+* byte chi2/df = 16.03 (uniform ~1.0) with **all bias on EVEN bytes** —
+  the low byte of every u16 (chi2 27.2 vs 1.4 on odd bytes);
+* **bits 0-1 of every u16 are biased** (P(b0=1)=0.441, P(00)=32.6%),
+  all other bits ≈ 0.500 — i.e. dword bits 0,1,16,17;
+* theorem: the `(-x)^x` construction preserves bit 0 of the plaintext
+  exactly (the i-dependent constants cancel too) — verified empirically;
+* but the dword cipher **cannot** leak bit 16 (measured 0.503-0.506 when
+  encrypting real ARM64/scatter plaintexts) — so data1.dat's cipher has
+  **16-bit granularity**;
+* frequent u16s are multiples of 256 (`0xe000, 0xc000, 0xf000, 0x7000…`)
+  and frequent even bytes are all ≡ 0 mod 4 (`00 e0 70 c0 f0 9c 38…`);
+* ruled out: raw deflate/lzma/brotli, repeating-key XOR (no period ≤16K),
+  a u16 port of the stream cipher (all 65536 keys × 2 variants),
+  shift-XOR obfuscations (u16/u32, all k), delta/xor chains, the stage-1
+  family (13 keys × u32/u16).
+
+The e2 and game-0xf3 blobs are statistically UNIFORM (chi2 ≈ 1.1) — so
+data1.dat's weaker 16-bit-granular scheme is unique among the encrypted
+assets, and its consumer lives in the still-encrypted game code.
+Notably, **bits 0-1 of every u16 of data1.dat are plaintext bits readable
+without any key** — a 90848-bit known-plaintext surface for future work.
+
+Details: `evidence/m2b-x-sweep.json`.
