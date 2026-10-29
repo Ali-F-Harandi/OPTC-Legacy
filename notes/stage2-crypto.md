@@ -329,12 +329,110 @@ from distance `accum + lo`.
 
 ARM64 verified: `0xe3+0x23d8` = `sub sp, sp, #0xa0; stp x19, x30, …`
 (classic prologue), `0xe3+0x5ad8` and `0x96+0xe678` = `adrp x1, …; ldr
-x0, [x1, #…]; mov w0, #1; ret` (init stubs). The images have zero gaps
-where the patch containers plug in — that merge (`0x11b4` builds a
-0x518-byte table, `0x3188` applies it) is the next M1b item, as is the
-still-encrypted 969 KB raw blob (id 0xf3, consumed by a later stage).
+x0, [x1, #…]; mov w0, #1; ret` (init stubs). The patch containers that
+plug into these images are merged in §10; the still-unmapped 969 KB raw
+blob (id 0xf3, register-only) remains for a later stage.
 
-## 9. Reproduce
+
+## 9. The patch merge — `0x11b4`/`0x3188` (image holes, resolved)
+
+Each dd70 module entry carries a second nested container — the *patch*
+(outer-container fields `dst_off`/`dst_size`, read by the installer as
+`desc->[0x10]/[0x14]`). It decrypts with the **same** stream→CBC→tree-LZ
+pipeline and yields a small blob (0x2b2 / 0xe10 / 0x811 B) that turns the
+module image into a loadable object.
+
+### 9.1 Runtime chain
+
+```
+FUN_00000f0c(target, desc, base, x4, x5, flags)      patch installer
+  dd70(base+desc[0x10], desc[0x14])  -> p            decrypt patch
+  FUN_000011b4(p, len, ctx, x4, x5)                  build 0x518-B ctx
+  FUN_00003188(target, ctx, flags)                   merge (8 phases)
+  free(p)
+```
+
+`FUN_000011b4` reads six `(offset, count)` pairs from the patch header and
+stores pointer/count pairs into the ctx (the second header word is a
+**record count**, except sec2 where it is a byte size):
+
+| sec | source | ctx slots | record | contents |
+|-----|--------|-----------|--------|----------|
+| 0 | `p+0x00/+0x04` | `+0x30/+0x38` | 56 B | hole/segment table |
+| 1 | `p+0x08/+0x0c` | `+0x58/+0x60` | 16 B | keyed arrays |
+| 2 | `p+0x10/+0x14` | `+0xb8/+0xc0` | — | string table |
+| 3 | `p+0x18/+0x1c` | `+0xa8/+0xb0` | 24 B | symbols |
+| 4 | `p+0x20/+0x24` | `+0x88/+0x90` | 24 B | relocs (mostly 0x403) |
+| 5 | `p+0x28/+0x2c` | `+0x98/+0xa0` | 24 B | relocs (mostly 0x402) |
+
+plus `p->[0x38]` → `ctx+0x114` (u32 = 0xb7 in all three patches).
+
+### 9.2 `FUN_00003188` — the eight phases
+
+| phase | fn | role |
+|-------|----|------|
+| A | `0x3828` | global `0x25928` = target (setter) |
+| B | `0x3dd0` | globals `0x25930`/`0x25938` = base/size (from `target+0x518/+0x520`) |
+| C | `0x3e44` | global `0x25940` = ctx (setter; `0x3e68` getter) |
+| D | `0x4d44` | guard on sec4/sec5 → `0x5aa8` builds `symaddr[]` → `0x4c14(1,ctx)` + `0x4c14(0,ctx)` → `0x4a50` applies relocs |
+| E | `0x2bb8` | **`memset(__bss_start, 0, _edata - __bss_start)`** — the BSS hole is *supposed* to be zero |
+| F | `0x372c` | mprotect RW page ranges for writable holes |
+| G | `0x2ccc` | mprotect final prot per hole (`ent[0x10]`=off, `ent[0x28]`=len) |
+| H | `0x35c4` | `0x34f8(0xC)` + `0x3394(0x19,0x1B)` + `0x3394(0x20,0x21)` + `__clear_cache` |
+
+The `__bss_start`/`_edata` names come out of the `0xd528` string
+deobfuscator (`plain[i] = (~ror8(c[i],3) - (i&3)) & 0xFF`) — Ghidra had
+mangled `0x2bb8`'s prologue into a separate function (`FUN_0000318c`),
+hiding the third argument and the whole merge; the real `FUN_00003188`
+starts four bytes earlier (`sub sp, sp, #0x50`).
+
+### 9.3 Relocation semantics (`FUN_00004e30`)
+
+Record (24 B): `{u64 dst; u64 type | sym_idx<<32; u64 addend}` — the high
+32 bits of the second word are the symbol index (0x403 records have 0 there,
+which is why `0x4a50` only pre-resolves the rest via `FUN_000048c8`):
+
+| type | value written |
+|------|---------------|
+| `0x400` | `symaddr[sym]` |
+| `0x401`/`0x402`/`0x101` | `symaddr[sym] + addend` |
+| `0x403` | `base + addend` (rebase) |
+| `0x104` | `symaddr[sym] - dst + addend` (PC-relative) |
+
+`symaddr` is the array `0x5aa8` allocates (`count*8`) and fills by resolving
+each sec3 symbol; sec3 records are `{u64 name_off|type<<32; u64 value; u64
+size}` with type `0x12` = STB_GLOBAL\|STT_FUNC and names in the sec2 strtab.
+
+### 9.4 What the “holes” actually are
+
+The extracted images are only 13/45/21 % non-zero, and the patch explains
+all of it — there is no missing data:
+
+* **`[code_end .. data_start)` is BSS** (~64 KB, align 0x10000): phase E
+  zeroes it at runtime; statically it stays zero.
+* **The data segment is mostly zero-filled linkage state**: an init array
+  (sec1 keys `0x19`/`0x1B` → `{off, count}`), a GOT, and pointer slots
+  pre-linked for base 0. The 0x403 rebases rewrite them at load; statically
+  almost all values are already present (the images are pre-linked for
+  base 0 — only the init-array fill actually changes bytes).
+* **The code segment starts with a zero cave** ([0..0x660/0x27d0/0x1fd0))
+  followed by a classic **PLT** (PLT0 = `stp x16,x30; … br x17`, one stub
+  per import); GOT slots are pre-filled with the PLT0 address — lazy
+  binding that the 0x402 relocs overwrite eagerly.
+* Imports per module: e0/0x81 → dlerror, `__errno`, `__cxa_finalize`,
+  dlopen, `__cxa_atexit`, dlsym; e1/0x96 → 28 unique (adds zlib
+  inflate family, pthread, mmap, stdio, dladdr …); e3/0xe3 →
+  pthread_create/join, `__errno`, `__cxa_*`.
+
+### 9.5 Static merge
+
+`tools/stage2_crypto.py --modules` now writes `<id>_merged.bin` next to the
+raw image: 0x403 rebases applied at base 0, in-module symbol relocs
+resolved via symbol.value, imports reported unresolved. Only 2 bytes change
+per image (the init-array slot `[1]`); every other 0x403 value is already
+in the image, confirming the pre-linked-at-zero hypothesis.
+
+## 10. Reproduce
 
 ```bash
 python3 tools/unpack_7ffe.py lib__7ffe__.so out/        # M1  → payload
@@ -345,6 +443,7 @@ python3 tools/stage2_crypto.py lib__7ffe__.so --container
 python3 tools/stage2_crypto.py lib__7ffe__.so --modules \
     --payload out/7ffe-payload.dec --out out/modules
 # → 4 decrypted module images (90/90 entries, ARM64-verified init fns)
+#    + <id>_patch.bin and <id>_merged.bin per dd70 module (0x11b4/0x3188 merge)
 ```
 
 Evidence: `evidence/stage2-crypto.json`.

@@ -18,31 +18,31 @@
   },
   {
    "id": "platform-shell",
-   "name": "Platform shell \u2014 Bisque Java layer",
+   "name": "Platform shell — Bisque Java layer",
    "done": 7,
    "weight": 8,
    "note": "9 of 187 jp.co.drecom.bisque classes deep-documented (JADX)"
   },
   {
    "id": "loader-7ffe",
-   "name": "Anti-tamper loader \u2014 lib__7ffe__.so",
-   "done": 97,
+   "name": "Anti-tamper loader — lib__7ffe__.so",
+   "done": 98,
    "weight": 4,
-   "note": "ALL 4 embedded module blobs DECRYPTED (90/90 container entries, zero failures): nested dd70 containers reversed \u2014 header formulas, key table = flattened Huffman tree (3B nodes), chunk pipeline eb34(stream)->fc30(CBC floor len>>4)->scatter->tree-LZ; ARM64 verified at init-fn offsets (0xe3+0x23d8 prologue, 0x96+0xe678 init stub); two re-impl traps fixed (32-bit truncation before shifts, counter-based pair shifts). tools/stage2_crypto.py --modules. Remaining: 0x11b4/0x3188 patch merge, raw 0xf3 blob (969KB register-only), data1.dat seed"
+   "note": "ALL 4 module blobs decrypted (90/90 entries) AND patch-merged: 0x11b4 builds a 0x518 ctx from 6 patch sections (holes/arrays/strtab/symbols/relocs), 0x3188 runs 8 phases (symaddr build, reloc apply 0x400/0x401/0x402/0x403/0x101/0x104, memset(__bss_start,_edata-__bss_start), mprotect RX/RW, init arrays + __clear_cache). Image 'holes' resolved: BSS (zero by design) + PLT/GOT/data slots pre-linked at base 0 — merged images differ by 2 bytes (init-array fill). Imports mapped (e1 = zlib+dl+pthread). tools/stage2_crypto.py --modules. Remaining: raw 0xf3 blob (969KB register-only), data1.dat seed"
   },
   {
    "id": "signer",
-   "name": "API signer \u2014 libsigner.so",
+   "name": "API signer — libsigner.so",
    "done": 85,
    "weight": 3,
    "note": "519 functions pseudocoded; request-signing scheme reconstructed"
   },
   {
    "id": "engine-core",
-   "name": "Engine core \u2014 libgame.so",
+   "name": "Engine core — libgame.so",
    "done": 4,
    "weight": 20,
-   "note": "section/capability map done; 38.2 MiB .text \u2248 13k\u201326k functions pending"
+   "note": "section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending"
   },
   {
    "id": "engine-graphics",
@@ -84,7 +84,7 @@
    "name": "Desktop build (SDL2)",
    "done": 30,
    "weight": 5,
-   "note": "null/SDL2 backends compile clean on Linux \u2014 smoke-tested"
+   "note": "null/SDL2 backends compile clean on Linux — smoke-tested"
   },
   {
    "id": "tooling",
@@ -103,21 +103,21 @@
  ],
  "unit_grids": [
   {
-   "label": "Platform shell \u2014 jp.co.drecom.bisque (1 cell = 1 class)",
+   "label": "Platform shell — jp.co.drecom.bisque (1 cell = 1 class)",
    "total": 187,
    "done": 9,
    "in_progress": 4,
    "per_row": 25
   },
   {
-   "label": "Loader \u2014 lib__7ffe__.so (1 cell = 5 functions, 277 total)",
+   "label": "Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)",
    "total": 56,
    "done": 49,
    "in_progress": 3,
    "per_row": 28
   },
   {
-   "label": "API signer \u2014 libsigner.so (1 cell = 20 functions, 519 total)",
+   "label": "API signer — libsigner.so (1 cell = 20 functions, 519 total)",
    "total": 26,
    "done": 22,
    "in_progress": 2,

@@ -148,7 +148,7 @@
   "data1_dat": {
    "size": 181700,
    "structure": "4 + 181696 (tail exactly 16-byte aligned = 11356 AES blocks)",
-   "status": "NOT the embedded container (see embedded_module_container); loaded later via the game-side path, seed unknown \u2014 4-byte head 0x3ecbf1da is a candidate"
+   "status": "NOT the embedded container (see embedded_module_container); loaded later via the game-side path, seed unknown — 4-byte head 0x3ecbf1da is a candidate"
   }
  },
  "embedded_module_container": {
@@ -228,7 +228,7 @@
    }
   ],
   "cross_check": "entry[0].src_off = 0x178 = 8 + 4*0x5C (table ends exactly after 4 entries); entry[2] end = entry[3].src_off",
-  "blob_state": "all four blobs entropy ~7.95 b/B \u2014 still encrypted; stream/AES pipeline is the next M1b item",
+  "blob_state": "all four blobs entropy ~7.95 b/B — still encrypted; stream/AES pipeline is the next M1b item",
   "device_registry": {
    "register": "0xf90c",
    "release": "0xfa20",
@@ -312,5 +312,164 @@
   "shipped precomputed key schedule avoids a runtime key expansion to inspect"
  ],
  "tool": "tools/stage2_crypto.py",
- "notes": "notes/stage2-crypto.md"
+ "notes": "notes/stage2-crypto.md",
+ "patch_merge": {
+  "installer": "FUN_00000f0c: dd70(desc->[0x10],desc->[0x14]) -> FUN_000011b4(ctx) -> FUN_00003188(target,ctx,flags) -> free",
+  "ctx_layout": {
+   "0x518": "sizeof",
+   "sec0_holes": {
+    "ctx": "0x30/0x38",
+    "record": 56,
+    "fields": "kind,flags,src,dst,dst2,src_len,dst_len,align"
+   },
+   "sec1_arrays": {
+    "ctx": "0x58/0x60",
+    "record": 16,
+    "keys": "0x19/0x1B init array (off,count); 0x20/0x21 fini; 0x1A/0x1C second; 0x0C single call"
+   },
+   "sec2_strtab": {
+    "ctx": "0xb8/0xc0",
+    "note": "second word is byte size"
+   },
+   "sec3_symbols": {
+    "ctx": "0xa8/0xb0",
+    "record": 24,
+    "fields": "name_off|type<<32, value, size; type 0x12"
+   },
+   "sec4_relocs": {
+    "ctx": "0x88/0x90",
+    "record": 24
+   },
+   "sec5_relocs": {
+    "ctx": "0x98/0xa0",
+    "record": 24
+   },
+   "0x114": "p->[0x38] u32 (= 0xb7 in all three)"
+  },
+  "phases_0x3188": [
+   [
+    "A",
+    "0x3828",
+    "global 0x25928 = target"
+   ],
+   [
+    "B",
+    "0x3dd0",
+    "global 0x25930/0x25938 = base/size"
+   ],
+   [
+    "C",
+    "0x3e44",
+    "global 0x25940 = ctx"
+   ],
+   [
+    "D",
+    "0x4d44",
+    "0x5aa8 symaddr[] + 0x4c14 -> 0x4a50 relocs"
+   ],
+   [
+    "E",
+    "0x2bb8",
+    "memset(__bss_start, 0, _edata - __bss_start)"
+   ],
+   [
+    "F",
+    "0x372c",
+    "mprotect RW (holes with flag bit0)"
+   ],
+   [
+    "G",
+    "0x2ccc",
+    "mprotect final prot (off=ent[0x10], len=ent[0x28])"
+   ],
+   [
+    "H",
+    "0x35c4",
+    "init/fini arrays + __clear_cache 0x364c"
+   ]
+  ],
+  "reloc_types": {
+   "0x400": "symaddr[sym]",
+   "0x401": "symaddr[sym]+addend",
+   "0x402": "symaddr[sym]+addend",
+   "0x403": "base+addend",
+   "0x101": "symaddr[sym]+addend",
+   "0x104": "symaddr[sym]-dst+addend (PC-relative)"
+  },
+  "bss_symbols": [
+   "__bss_start",
+   "_edata"
+  ],
+  "results": [
+   {
+    "id": "0x81",
+    "segments": [
+     [
+      0,
+      15520,
+      "RX"
+     ],
+     [
+      81320,
+      82136,
+      "RW"
+     ]
+    ],
+    "relocs_0x403": 3,
+    "imports": [
+     "dlerror",
+     "__errno",
+     "__cxa_finalize",
+     "dlopen",
+     "__cxa_atexit",
+     "dlsym"
+    ],
+    "bytes_changed_by_merge": 2
+   },
+   {
+    "id": "0x96",
+    "segments": [
+     [
+      0,
+      102568,
+      "RX"
+     ],
+     [
+      170720,
+      174192,
+      "RW"
+     ]
+    ],
+    "relocs_0x403": 64,
+    "relocs_0x401": 4,
+    "imports_unique": 28,
+    "bytes_changed_by_merge": 2
+   },
+   {
+    "id": "0xe3",
+    "segments": [
+     [
+      0,
+      36208,
+      "RX"
+     ],
+     [
+      105432,
+      108088,
+      "RW"
+     ]
+    ],
+    "relocs_0x403": 62,
+    "imports": [
+     "pthread_create",
+     "__errno",
+     "__cxa_finalize",
+     "__cxa_atexit",
+     "pthread_join"
+    ],
+    "bytes_changed_by_merge": 2
+   }
+  ],
+  "conclusion": "image holes = BSS (zero by design, phase E) + PLT/GOT/data slots pre-linked at base 0; merged images differ from raw by exactly 2 bytes (init-array slot fill)"
+ }
 }

@@ -24,6 +24,13 @@ module embedded in lib__7ffe__.so (regenerate with tools/unpack_7ffe.py):
   0x0000dacc/    stream -> AES-CBC -> container-extract pipeline fragment
     0x0000dafc
   0x0000ecd8     container entry iterator -> FUN_0000ee70 extractor
+  0x00000f0c     patch installer: dd70(patch) -> 0x11b4 ctx -> 0x3188 merge
+  0x000011b4     patch descriptor -> 0x518-byte merge ctx (6 sections)
+  0x00003188     patch merge orchestrator (relocs / BSS / mprotect / init)
+  0x00004e30     reloc value computation (0x400/0x401/0x402/0x403/0x101/0x104)
+  0x00002bb8     BSS clear: memset(__bss_start, 0, _edata - __bss_start)
+  0x00003394/34f8  init/fini array runner (sec1 keyed arrays)
+  0x0000364c     __clear_cache (dc cvau / ic ivau / dsb / isb)
 
 Embedded-module container (M1b hand-off, fully parsed by this file):
 
@@ -522,6 +529,116 @@ def dd70_extract(view, m, stage2_tabs, stage2_rk, key=STREAM_KEY):
     return bytes(img), (entries_ok, entries_fail)
 
 
+# ---- patch containers: the 0x11b4/0x3188 merge (image holes) ----------------
+#
+# Runtime chain (fully reversed):
+#   FUN_00000f0c(target, desc, base, x4, x5, w6)     patch installer
+#     desc->[0x10]/[0x14] = patch container (off,size) in the 1 MB container
+#     dd70(patch) -> decrypted patch blob `p`  (same pipeline as module images)
+#     FUN_000011b4(p, len, ctx, x4, x5)              build 0x518-byte ctx:
+#       sec0 (p+0x00/+0x04) -> ctx+0x30/+0x38  hole/segment table, 56 B entries
+#       sec1 (p+0x08/+0x0c) -> ctx+0x58/+0x60  keyed arrays, 16 B records
+#       sec2 (p+0x10/+0x14) -> ctx+0xb8/+0xc0  string table (2nd word = size)
+#       sec3 (p+0x18/+0x1c) -> ctx+0xa8/+0xb0  symbols, 24 B records
+#       sec4 (p+0x20/+0x24) -> ctx+0x88/+0x90  relocs, 24 B records
+#       sec5 (p+0x28/+0x2c) -> ctx+0x98/+0xa0  relocs, 24 B records
+#       p->[0x38]            -> ctx+0x114      u32 (0xb7 in all three patches)
+#       ctx->[0x10] = ctx->[0x20] = x4 (module image base), ctx->[0x18] = x5
+#     FUN_00003188(target, ctx, flags)               merge orchestrator:
+#       A 0x3828 global target   B 0x3dd0 global base/size (target+0x518/+0x520)
+#       C 0x3e44 global ctx      D 0x4d44: 0x5aa8 build symaddr[] +
+#         0x4c14(1,ctx)/0x4c14(0,ctx) -> 0x4a50 apply relocs (FUN_00004e30)
+#       E 0x2bb8: memset(__bss_start, 0, _edata - __bss_start)  (BSS = zeros;
+#         names deobfuscated by 0xd528: plain[i] = (~ror8(c[i],3) - (i&3)) & 0xFF)
+#       F 0x372c: mprotect RW page ranges (holes with flag bit0)
+#       G 0x2ccc: mprotect final prot per hole {kind==1, prot, off=ent[0x10],
+#         len=ent[0x28]}   H 0x35c4: 0x34f8(0xC) + 0x3394(0x19,0x1B) +
+#         0x3394(0x20,0x21) + __clear_cache (0x364c)
+#
+# Hole/segment entry (56 B): {u32 kind(==1); u32 flags(bit0->PROT_EXEC,
+#   bit1->PROT_WRITE, bit2->PROT_READ); u64 src; u64 dst; u64 dst2;
+#   u64 src_len; u64 dst_len; u64 align}
+# Reloc record (24 B): {u64 dst; u64 type | sym_idx<<32; u64 addend}
+#   0x403: img[dst] = base + addend      0x400: img[dst] = symaddr[sym]
+#   0x401/0x402/0x101: img[dst] = symaddr[sym] + addend
+#   0x104: img[dst] = symaddr[sym] - dst + addend   (PC-relative)
+# Keyed arrays (16 B {u32 key, _, u32 off, _}): 0x19/0x1B = init array
+#   (off, count) at image[off]; 0x20/0x21 = fini array; 0x1A/0x1C = second
+#   array pair; 0x0C = single call. Symbols: {u64 name_off|type<<32; u64 value;
+#   u64 size}, type 0x12 = STB_GLOBAL|STT_FUNC, name_off into sec2 strtab.
+#
+# Image layout (confirmed on all three modules): [0..code_end) RX code with a
+# leading PLT (PLT0 + per-import stubs, GOT pre-filled with PLT0 = lazy
+# binding), [code_end..data_start) = BSS (zero at runtime, phase E),
+# [data_start..image_end) RW data (init array, GOT, 0x403-linked pointers).
+
+
+def parse_patch(p):
+    """Parse a decrypted patch blob per FUN_000011b4."""
+    secs = [struct.unpack_from("<2I", p, i * 8) for i in range(6)]
+    d = {"w38": struct.unpack_from("<I", p, 0x38)[0]}
+    s = secs[0]                                     # hole/segment table
+    d["holes"] = []
+    for i in range(s[1]):
+        e = p[s[0] + i * 56:s[0] + (i + 1) * 56]
+        kind, fl = struct.unpack_from("<2I", e, 0)
+        f08, f10, f18, f20, f28, f30 = struct.unpack_from("<6Q", e, 8)
+        d["holes"].append({"kind": kind, "flags": fl, "src": f08, "dst": f10,
+                           "dst2": f18, "slen": f20, "dlen": f28, "align": f30})
+    s = secs[1]                                     # keyed arrays
+    d["arrays"] = []
+    for i in range(s[1]):
+        key, _, off, _ = struct.unpack_from("<4I", p, s[0] + i * 16)
+        d["arrays"].append({"key": key, "off": off})
+    s = secs[2]                                     # string table
+    strtab = p[s[0]:s[0] + s[1]]
+    d["strtab"] = strtab
+    s = secs[3]                                     # symbols
+    d["symbols"] = []
+    for i in range(s[1]):
+        w0, val, size = struct.unpack_from("<3Q", p, s[0] + i * 24)
+        name_off, stype = w0 & M32, w0 >> 32
+        end = strtab.find(b"\0", name_off) if name_off < len(strtab) else name_off
+        name = strtab[name_off:end].decode("utf-8", "replace") if name_off else ""
+        d["symbols"].append({"name": name, "type": stype, "value": val, "size": size})
+    for si, nm in ((4, "reloc_a"), (5, "reloc_b")):
+        s = secs[si]
+        d[nm] = []
+        for i in range(s[1]):
+            dst, w1, val = struct.unpack_from("<3Q", p, s[0] + i * 24)
+            d[nm].append({"dst": dst, "type": w1 & M32, "sym": w1 >> 32, "val": val})
+    return d
+
+
+def merge_patch(img, p, base=0):
+    """Apply a parsed patch to a module image (static reconstruction).
+
+    0x403 rebases are written as base+addend; in-module symbol relocs resolve
+    via symbol.value; imports are returned unresolved (runtime libc addrs).
+    Mutates and returns (img, imports).
+    """
+    symtab = {i: s for i, s in enumerate(p["symbols"])}
+    imports, applied = [], 0
+    for r in p["reloc_a"] + p["reloc_b"]:
+        t, dst, addend = r["type"], r["dst"], r["val"]
+        if dst + 8 > len(img):
+            continue
+        if t == 0x403:
+            struct.pack_into("<Q", img, dst, (base + addend) & (2**64 - 1))
+            applied += 1
+            continue
+        s = symtab.get(r["sym"])
+        if s and s["value"]:
+            sa = base + s["value"]
+            val = {0x400: sa, 0x104: (sa - dst + addend) & (2**64 - 1)}.get(t, sa + addend)
+            struct.pack_into("<Q", img, dst, val & (2**64 - 1))
+            applied += 1
+        else:
+            imports.append({"dst": dst, "type": hex(t),
+                            "symbol": s["name"] if s else "?"})
+    return img, {"applied": applied, "imports": imports}
+
+
 def extract_modules(so_bytes, blob, out_dir=None):
     """Decrypt all four embedded module blobs. Returns a result list."""
     import os
@@ -552,11 +669,25 @@ def extract_modules(so_bytes, blob, out_dir=None):
                 rec["patch_entries_ok"] = pok
                 rec["patch_entries_fail"] = pfail
                 rec["patch_image"] = pimg
+                # ---- 0x11b4/0x3188 merge: apply the patch (static base 0)
+                pd = parse_patch(pimg)
+                rec["patch"] = {"holes": pd["holes"],
+                                "symbols": [s["name"] for s in pd["symbols"]],
+                                "arrays": [(hex(a["key"]), hex(a["off"]))
+                                            for a in pd["arrays"]]}
+                merged, mstats = merge_patch(bytearray(rec["image"]), pd, base=0)
+                rec["merged_image"] = bytes(merged)
+                rec["merge"] = mstats
         results.append(rec)
         if out_dir:
             os.makedirs(out_dir, exist_ok=True)
             with open(f"{out_dir}/module_{f['id']:#04x}.bin", "wb") as fh:
                 fh.write(rec["image"])
+            if "merged_image" in rec:
+                with open(f"{out_dir}/module_{f['id']:#04x}_merged.bin", "wb") as fh:
+                    fh.write(rec["merged_image"])
+                with open(f"{out_dir}/module_{f['id']:#04x}_patch.bin", "wb") as fh:
+                    fh.write(rec["patch_image"])
     return results
 
 
@@ -613,8 +744,18 @@ def main():
                     line += (f"; patch {r['patch_total']:#x} B "
                              f"ok={r['patch_entries_ok']} fail={r['patch_entries_fail']}")
                 print(line)
+                if "merge" in r:
+                    segs = " ".join(
+                        f"[{h['dst']:#x}..{h['dst'] + h['dlen']:#x})"
+                        f"{''.join(c for b, c in ((h['flags'] & 4, 'R'), (h['flags'] & 2, 'W'), (h['flags'] & 1, 'X')) if b)}"
+                        for h in r["patch"]["holes"] if h["kind"] == 1)
+                    print(f"    merge: segments {segs}; "
+                          f"{r['merge']['applied']} relocs applied, "
+                          f"{len(r['merge']['imports'])} imports "
+                          f"({len(set(i['symbol'] for i in r['merge']['imports']))} uniq)")
                 if out_dir:
-                    print(f"    -> {out_dir}/module_{r['id']:#04x}.bin")
+                    print(f"    -> {out_dir}/module_{r['id']:#04x}.bin"
+                          + (" (+ _merged.bin, _patch.bin)" if "merged_image" in r else ""))
         return
 
     blob = open(blob_path, "rb").read()

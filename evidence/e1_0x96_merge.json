@@ -1,0 +1,1183 @@
+{
+ "id": 150,
+ "image_size": 174192,
+ "patch_size": 3600,
+ "holes": [
+  {
+   "kind": 1,
+   "flags": 5,
+   "src": 0,
+   "dst": 0,
+   "dst2": 0,
+   "slen": 102568,
+   "dlen": 102568,
+   "align": 65536
+  },
+  {
+   "kind": 1,
+   "flags": 6,
+   "src": 105184,
+   "dst": 170720,
+   "dst2": 170720,
+   "slen": 1768,
+   "dlen": 3472,
+   "align": 65536
+  }
+ ],
+ "symbols": [
+  {
+   "name": "",
+   "type": 0,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlerror",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlclose",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlopen",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlsym",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlerror",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "getgid",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "sysconf",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "pthread_create",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "munmap",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "__errno",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "getenv",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "inflate",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "__cxa_finalize",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "getuid",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "malloc",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "vsnprintf",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dladdr",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "lseek",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "mmap",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlclose",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "calloc",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "read",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlopen",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "__cxa_atexit",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlsym",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "open",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "inflateEnd",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "mprotect",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "pthread_join",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "inflateInit2_",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "close",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "free",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  }
+ ],
+ "arrays": [
+  {
+   "key": 25,
+   "off": 170720
+  },
+  {
+   "key": 27,
+   "off": 8
+  },
+  {
+   "key": 26,
+   "off": 170728
+  },
+  {
+   "key": 28,
+   "off": 16
+  }
+ ],
+ "reloc_val": [
+  {
+   "dst": 170728,
+   "type": 1027,
+   "sym": 0,
+   "val": 10672
+  },
+  {
+   "dst": 171496,
+   "type": 1027,
+   "sym": 0,
+   "val": 172160
+  },
+  {
+   "dst": 171512,
+   "type": 1027,
+   "sym": 0,
+   "val": 172448
+  },
+  {
+   "dst": 171520,
+   "type": 1027,
+   "sym": 0,
+   "val": 36036
+  },
+  {
+   "dst": 171528,
+   "type": 1027,
+   "sym": 0,
+   "val": 172376
+  },
+  {
+   "dst": 171536,
+   "type": 1027,
+   "sym": 0,
+   "val": 172208
+  },
+  {
+   "dst": 171544,
+   "type": 1027,
+   "sym": 0,
+   "val": 172392
+  },
+  {
+   "dst": 171552,
+   "type": 1027,
+   "sym": 0,
+   "val": 172144
+  },
+  {
+   "dst": 171560,
+   "type": 1027,
+   "sym": 0,
+   "val": 36052
+  },
+  {
+   "dst": 171568,
+   "type": 1027,
+   "sym": 0,
+   "val": 172360
+  },
+  {
+   "dst": 171576,
+   "type": 1027,
+   "sym": 0,
+   "val": 74912
+  },
+  {
+   "dst": 171584,
+   "type": 1027,
+   "sym": 0,
+   "val": 172296
+  },
+  {
+   "dst": 171592,
+   "type": 1027,
+   "sym": 0,
+   "val": 172232
+  },
+  {
+   "dst": 171600,
+   "type": 1027,
+   "sym": 0,
+   "val": 172320
+  },
+  {
+   "dst": 171608,
+   "type": 1027,
+   "sym": 0,
+   "val": 172136
+  },
+  {
+   "dst": 171616,
+   "type": 1027,
+   "sym": 0,
+   "val": 172176
+  },
+  {
+   "dst": 171624,
+   "type": 1027,
+   "sym": 0,
+   "val": 172192
+  },
+  {
+   "dst": 171632,
+   "type": 1027,
+   "sym": 0,
+   "val": 172256
+  },
+  {
+   "dst": 171640,
+   "type": 1027,
+   "sym": 0,
+   "val": 172248
+  },
+  {
+   "dst": 171648,
+   "type": 1027,
+   "sym": 0,
+   "val": 172168
+  },
+  {
+   "dst": 171656,
+   "type": 1027,
+   "sym": 0,
+   "val": 172384
+  },
+  {
+   "dst": 171664,
+   "type": 1027,
+   "sym": 0,
+   "val": 172088
+  },
+  {
+   "dst": 171680,
+   "type": 1027,
+   "sym": 0,
+   "val": 172440
+  },
+  {
+   "dst": 171688,
+   "type": 1027,
+   "sym": 0,
+   "val": 172416
+  },
+  {
+   "dst": 171696,
+   "type": 1027,
+   "sym": 0,
+   "val": 172304
+  },
+  {
+   "dst": 171704,
+   "type": 1027,
+   "sym": 0,
+   "val": 172128
+  },
+  {
+   "dst": 171712,
+   "type": 1027,
+   "sym": 0,
+   "val": 172352
+  },
+  {
+   "dst": 171720,
+   "type": 1027,
+   "sym": 0,
+   "val": 172184
+  },
+  {
+   "dst": 171728,
+   "type": 1027,
+   "sym": 0,
+   "val": 172432
+  },
+  {
+   "dst": 171736,
+   "type": 1027,
+   "sym": 0,
+   "val": 172240
+  },
+  {
+   "dst": 171744,
+   "type": 1027,
+   "sym": 0,
+   "val": 172120
+  },
+  {
+   "dst": 171752,
+   "type": 1027,
+   "sym": 0,
+   "val": 172064
+  },
+  {
+   "dst": 171760,
+   "type": 1027,
+   "sym": 0,
+   "val": 172056
+  },
+  {
+   "dst": 171768,
+   "type": 1027,
+   "sym": 0,
+   "val": 172040
+  },
+  {
+   "dst": 171776,
+   "type": 1027,
+   "sym": 0,
+   "val": 172336
+  },
+  {
+   "dst": 171792,
+   "type": 1027,
+   "sym": 0,
+   "val": 172280
+  },
+  {
+   "dst": 171800,
+   "type": 1027,
+   "sym": 0,
+   "val": 173664
+  },
+  {
+   "dst": 171808,
+   "type": 1027,
+   "sym": 0,
+   "val": 172288
+  },
+  {
+   "dst": 171816,
+   "type": 1027,
+   "sym": 0,
+   "val": 172424
+  },
+  {
+   "dst": 171824,
+   "type": 1027,
+   "sym": 0,
+   "val": 172080
+  },
+  {
+   "dst": 171840,
+   "type": 1027,
+   "sym": 0,
+   "val": 172344
+  },
+  {
+   "dst": 171848,
+   "type": 1027,
+   "sym": 0,
+   "val": 174176
+  },
+  {
+   "dst": 171856,
+   "type": 1027,
+   "sym": 0,
+   "val": 172464
+  },
+  {
+   "dst": 171864,
+   "type": 1027,
+   "sym": 0,
+   "val": 172408
+  },
+  {
+   "dst": 171872,
+   "type": 1027,
+   "sym": 0,
+   "val": 172072
+  },
+  {
+   "dst": 171880,
+   "type": 1027,
+   "sym": 0,
+   "val": 172096
+  },
+  {
+   "dst": 171888,
+   "type": 1027,
+   "sym": 0,
+   "val": 172048
+  },
+  {
+   "dst": 171896,
+   "type": 1027,
+   "sym": 0,
+   "val": 36060
+  },
+  {
+   "dst": 171904,
+   "type": 1027,
+   "sym": 0,
+   "val": 174184
+  },
+  {
+   "dst": 171912,
+   "type": 1027,
+   "sym": 0,
+   "val": 172400
+  },
+  {
+   "dst": 171920,
+   "type": 1027,
+   "sym": 0,
+   "val": 172200
+  },
+  {
+   "dst": 171928,
+   "type": 1027,
+   "sym": 0,
+   "val": 172368
+  },
+  {
+   "dst": 171936,
+   "type": 1027,
+   "sym": 0,
+   "val": 172224
+  },
+  {
+   "dst": 171944,
+   "type": 1027,
+   "sym": 0,
+   "val": 173668
+  },
+  {
+   "dst": 171952,
+   "type": 1027,
+   "sym": 0,
+   "val": 172312
+  },
+  {
+   "dst": 171960,
+   "type": 1027,
+   "sym": 0,
+   "val": 172264
+  },
+  {
+   "dst": 171968,
+   "type": 1027,
+   "sym": 0,
+   "val": 172272
+  },
+  {
+   "dst": 171976,
+   "type": 1027,
+   "sym": 0,
+   "val": 172328
+  },
+  {
+   "dst": 171984,
+   "type": 1027,
+   "sym": 0,
+   "val": 36044
+  },
+  {
+   "dst": 171992,
+   "type": 1027,
+   "sym": 0,
+   "val": 172104
+  },
+  {
+   "dst": 172000,
+   "type": 1027,
+   "sym": 0,
+   "val": 35864
+  },
+  {
+   "dst": 172008,
+   "type": 1027,
+   "sym": 0,
+   "val": 172152
+  },
+  {
+   "dst": 172016,
+   "type": 1027,
+   "sym": 0,
+   "val": 172216
+  },
+  {
+   "dst": 172024,
+   "type": 1027,
+   "sym": 0,
+   "val": 172112
+  },
+  {
+   "dst": 171504,
+   "type": 1025,
+   "sym": 1,
+   "val": 0
+  },
+  {
+   "dst": 171672,
+   "type": 1025,
+   "sym": 2,
+   "val": 0
+  },
+  {
+   "dst": 171784,
+   "type": 1025,
+   "sym": 3,
+   "val": 0
+  },
+  {
+   "dst": 171832,
+   "type": 1025,
+   "sym": 4,
+   "val": 0
+  }
+ ],
+ "reloc_sym": [
+  {
+   "dst": 171264,
+   "type": 1026,
+   "sym": 5,
+   "val": 0
+  },
+  {
+   "dst": 171272,
+   "type": 1026,
+   "sym": 6,
+   "val": 0
+  },
+  {
+   "dst": 171280,
+   "type": 1026,
+   "sym": 7,
+   "val": 0
+  },
+  {
+   "dst": 171288,
+   "type": 1026,
+   "sym": 8,
+   "val": 0
+  },
+  {
+   "dst": 171296,
+   "type": 1026,
+   "sym": 9,
+   "val": 0
+  },
+  {
+   "dst": 171304,
+   "type": 1026,
+   "sym": 10,
+   "val": 0
+  },
+  {
+   "dst": 171312,
+   "type": 1026,
+   "sym": 11,
+   "val": 0
+  },
+  {
+   "dst": 171320,
+   "type": 1026,
+   "sym": 12,
+   "val": 0
+  },
+  {
+   "dst": 171328,
+   "type": 1026,
+   "sym": 13,
+   "val": 0
+  },
+  {
+   "dst": 171336,
+   "type": 1026,
+   "sym": 14,
+   "val": 0
+  },
+  {
+   "dst": 171344,
+   "type": 1026,
+   "sym": 15,
+   "val": 0
+  },
+  {
+   "dst": 171352,
+   "type": 1026,
+   "sym": 16,
+   "val": 0
+  },
+  {
+   "dst": 171360,
+   "type": 1026,
+   "sym": 17,
+   "val": 0
+  },
+  {
+   "dst": 171368,
+   "type": 1026,
+   "sym": 18,
+   "val": 0
+  },
+  {
+   "dst": 171376,
+   "type": 1026,
+   "sym": 19,
+   "val": 0
+  },
+  {
+   "dst": 171384,
+   "type": 1026,
+   "sym": 20,
+   "val": 0
+  },
+  {
+   "dst": 171392,
+   "type": 1026,
+   "sym": 21,
+   "val": 0
+  },
+  {
+   "dst": 171400,
+   "type": 1026,
+   "sym": 22,
+   "val": 0
+  },
+  {
+   "dst": 171408,
+   "type": 1026,
+   "sym": 23,
+   "val": 0
+  },
+  {
+   "dst": 171416,
+   "type": 1026,
+   "sym": 24,
+   "val": 0
+  },
+  {
+   "dst": 171424,
+   "type": 1026,
+   "sym": 25,
+   "val": 0
+  },
+  {
+   "dst": 171432,
+   "type": 1026,
+   "sym": 26,
+   "val": 0
+  },
+  {
+   "dst": 171440,
+   "type": 1026,
+   "sym": 27,
+   "val": 0
+  },
+  {
+   "dst": 171448,
+   "type": 1026,
+   "sym": 28,
+   "val": 0
+  },
+  {
+   "dst": 171456,
+   "type": 1026,
+   "sym": 29,
+   "val": 0
+  },
+  {
+   "dst": 171464,
+   "type": 1026,
+   "sym": 30,
+   "val": 0
+  },
+  {
+   "dst": 171472,
+   "type": 1026,
+   "sym": 31,
+   "val": 0
+  },
+  {
+   "dst": 171480,
+   "type": 1026,
+   "sym": 32,
+   "val": 0
+  }
+ ],
+ "init_fn": 0,
+ "fnptr2": 59000,
+ "got": [
+  {
+   "off": 171504,
+   "type": "0x401",
+   "symbol": "dlerror",
+   "stub": 0
+  },
+  {
+   "off": 171672,
+   "type": "0x401",
+   "symbol": "dlclose",
+   "stub": 0
+  },
+  {
+   "off": 171784,
+   "type": "0x401",
+   "symbol": "dlopen",
+   "stub": 0
+  },
+  {
+   "off": 171832,
+   "type": "0x401",
+   "symbol": "dlsym",
+   "stub": 0
+  },
+  {
+   "off": 171264,
+   "type": "0x402",
+   "symbol": "dlerror",
+   "stub": 10192
+  },
+  {
+   "off": 171272,
+   "type": "0x402",
+   "symbol": "getgid",
+   "stub": 10192
+  },
+  {
+   "off": 171280,
+   "type": "0x402",
+   "symbol": "sysconf",
+   "stub": 10192
+  },
+  {
+   "off": 171288,
+   "type": "0x402",
+   "symbol": "pthread_create",
+   "stub": 10192
+  },
+  {
+   "off": 171296,
+   "type": "0x402",
+   "symbol": "munmap",
+   "stub": 10192
+  },
+  {
+   "off": 171304,
+   "type": "0x402",
+   "symbol": "__errno",
+   "stub": 10192
+  },
+  {
+   "off": 171312,
+   "type": "0x402",
+   "symbol": "getenv",
+   "stub": 10192
+  },
+  {
+   "off": 171320,
+   "type": "0x402",
+   "symbol": "inflate",
+   "stub": 10192
+  },
+  {
+   "off": 171328,
+   "type": "0x402",
+   "symbol": "__cxa_finalize",
+   "stub": 10192
+  },
+  {
+   "off": 171336,
+   "type": "0x402",
+   "symbol": "getuid",
+   "stub": 10192
+  },
+  {
+   "off": 171344,
+   "type": "0x402",
+   "symbol": "malloc",
+   "stub": 10192
+  },
+  {
+   "off": 171352,
+   "type": "0x402",
+   "symbol": "vsnprintf",
+   "stub": 10192
+  },
+  {
+   "off": 171360,
+   "type": "0x402",
+   "symbol": "dladdr",
+   "stub": 10192
+  },
+  {
+   "off": 171368,
+   "type": "0x402",
+   "symbol": "lseek",
+   "stub": 10192
+  },
+  {
+   "off": 171376,
+   "type": "0x402",
+   "symbol": "mmap",
+   "stub": 10192
+  },
+  {
+   "off": 171384,
+   "type": "0x402",
+   "symbol": "dlclose",
+   "stub": 10192
+  },
+  {
+   "off": 171392,
+   "type": "0x402",
+   "symbol": "calloc",
+   "stub": 10192
+  },
+  {
+   "off": 171400,
+   "type": "0x402",
+   "symbol": "read",
+   "stub": 10192
+  },
+  {
+   "off": 171408,
+   "type": "0x402",
+   "symbol": "dlopen",
+   "stub": 10192
+  },
+  {
+   "off": 171416,
+   "type": "0x402",
+   "symbol": "__cxa_atexit",
+   "stub": 10192
+  },
+  {
+   "off": 171424,
+   "type": "0x402",
+   "symbol": "dlsym",
+   "stub": 10192
+  },
+  {
+   "off": 171432,
+   "type": "0x402",
+   "symbol": "open",
+   "stub": 10192
+  },
+  {
+   "off": 171440,
+   "type": "0x402",
+   "symbol": "inflateEnd",
+   "stub": 10192
+  },
+  {
+   "off": 171448,
+   "type": "0x402",
+   "symbol": "mprotect",
+   "stub": 10192
+  },
+  {
+   "off": 171456,
+   "type": "0x402",
+   "symbol": "pthread_join",
+   "stub": 10192
+  },
+  {
+   "off": 171464,
+   "type": "0x402",
+   "symbol": "inflateInit2_",
+   "stub": 10192
+  },
+  {
+   "off": 171472,
+   "type": "0x402",
+   "symbol": "close",
+   "stub": 10192
+  },
+  {
+   "off": 171480,
+   "type": "0x402",
+   "symbol": "free",
+   "stub": 10192
+  }
+ ],
+ "imports": [
+  {
+   "dst": 171504,
+   "type": "0x401",
+   "symbol": "dlerror"
+  },
+  {
+   "dst": 171672,
+   "type": "0x401",
+   "symbol": "dlclose"
+  },
+  {
+   "dst": 171784,
+   "type": "0x401",
+   "symbol": "dlopen"
+  },
+  {
+   "dst": 171832,
+   "type": "0x401",
+   "symbol": "dlsym"
+  },
+  {
+   "dst": 171264,
+   "type": "0x402",
+   "symbol": "dlerror"
+  },
+  {
+   "dst": 171272,
+   "type": "0x402",
+   "symbol": "getgid"
+  },
+  {
+   "dst": 171280,
+   "type": "0x402",
+   "symbol": "sysconf"
+  },
+  {
+   "dst": 171288,
+   "type": "0x402",
+   "symbol": "pthread_create"
+  },
+  {
+   "dst": 171296,
+   "type": "0x402",
+   "symbol": "munmap"
+  },
+  {
+   "dst": 171304,
+   "type": "0x402",
+   "symbol": "__errno"
+  },
+  {
+   "dst": 171312,
+   "type": "0x402",
+   "symbol": "getenv"
+  },
+  {
+   "dst": 171320,
+   "type": "0x402",
+   "symbol": "inflate"
+  },
+  {
+   "dst": 171328,
+   "type": "0x402",
+   "symbol": "__cxa_finalize"
+  },
+  {
+   "dst": 171336,
+   "type": "0x402",
+   "symbol": "getuid"
+  },
+  {
+   "dst": 171344,
+   "type": "0x402",
+   "symbol": "malloc"
+  },
+  {
+   "dst": 171352,
+   "type": "0x402",
+   "symbol": "vsnprintf"
+  },
+  {
+   "dst": 171360,
+   "type": "0x402",
+   "symbol": "dladdr"
+  },
+  {
+   "dst": 171368,
+   "type": "0x402",
+   "symbol": "lseek"
+  },
+  {
+   "dst": 171376,
+   "type": "0x402",
+   "symbol": "mmap"
+  },
+  {
+   "dst": 171384,
+   "type": "0x402",
+   "symbol": "dlclose"
+  },
+  {
+   "dst": 171392,
+   "type": "0x402",
+   "symbol": "calloc"
+  },
+  {
+   "dst": 171400,
+   "type": "0x402",
+   "symbol": "read"
+  },
+  {
+   "dst": 171408,
+   "type": "0x402",
+   "symbol": "dlopen"
+  },
+  {
+   "dst": 171416,
+   "type": "0x402",
+   "symbol": "__cxa_atexit"
+  },
+  {
+   "dst": 171424,
+   "type": "0x402",
+   "symbol": "dlsym"
+  },
+  {
+   "dst": 171432,
+   "type": "0x402",
+   "symbol": "open"
+  },
+  {
+   "dst": 171440,
+   "type": "0x402",
+   "symbol": "inflateEnd"
+  },
+  {
+   "dst": 171448,
+   "type": "0x402",
+   "symbol": "mprotect"
+  },
+  {
+   "dst": 171456,
+   "type": "0x402",
+   "symbol": "pthread_join"
+  },
+  {
+   "dst": 171464,
+   "type": "0x402",
+   "symbol": "inflateInit2_"
+  },
+  {
+   "dst": 171472,
+   "type": "0x402",
+   "symbol": "close"
+  },
+  {
+   "dst": 171480,
+   "type": "0x402",
+   "symbol": "free"
+  }
+ ]
+}

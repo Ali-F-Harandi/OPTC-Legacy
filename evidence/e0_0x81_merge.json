@@ -1,0 +1,219 @@
+{
+ "id": 129,
+ "image_size": 82136,
+ "patch_size": 690,
+ "holes": [
+  {
+   "kind": 1,
+   "flags": 5,
+   "src": 0,
+   "dst": 0,
+   "dst2": 0,
+   "slen": 15520,
+   "dlen": 15520,
+   "align": 65536
+  },
+  {
+   "kind": 1,
+   "flags": 6,
+   "src": 15784,
+   "dst": 81320,
+   "dst2": 81320,
+   "slen": 609,
+   "dlen": 816,
+   "align": 65536
+  }
+ ],
+ "symbols": [
+  {
+   "name": "",
+   "type": 0,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlerror",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "__errno",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "__cxa_finalize",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlopen",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "__cxa_atexit",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  },
+  {
+   "name": "dlsym",
+   "type": 18,
+   "value": 0,
+   "size": 0
+  }
+ ],
+ "arrays": [
+  {
+   "key": 25,
+   "off": 81320
+  },
+  {
+   "key": 27,
+   "off": 8
+  },
+  {
+   "key": 26,
+   "off": 81328
+  },
+  {
+   "key": 28,
+   "off": 16
+  }
+ ],
+ "reloc_val": [
+  {
+   "dst": 81328,
+   "type": 1027,
+   "sym": 0,
+   "val": 1760
+  },
+  {
+   "dst": 81904,
+   "type": 1027,
+   "sym": 0,
+   "val": 13076
+  },
+  {
+   "dst": 81912,
+   "type": 1027,
+   "sym": 0,
+   "val": 82128
+  }
+ ],
+ "reloc_sym": [
+  {
+   "dst": 81848,
+   "type": 1026,
+   "sym": 1,
+   "val": 0
+  },
+  {
+   "dst": 81856,
+   "type": 1026,
+   "sym": 2,
+   "val": 0
+  },
+  {
+   "dst": 81864,
+   "type": 1026,
+   "sym": 3,
+   "val": 0
+  },
+  {
+   "dst": 81872,
+   "type": 1026,
+   "sym": 4,
+   "val": 0
+  },
+  {
+   "dst": 81880,
+   "type": 1026,
+   "sym": 5,
+   "val": 0
+  },
+  {
+   "dst": 81888,
+   "type": 1026,
+   "sym": 6,
+   "val": 0
+  }
+ ],
+ "init_fn": 0,
+ "fnptr2": 0,
+ "got": [
+  {
+   "off": 81848,
+   "type": "0x402",
+   "symbol": "dlerror",
+   "stub": 1632
+  },
+  {
+   "off": 81856,
+   "type": "0x402",
+   "symbol": "__errno",
+   "stub": 1632
+  },
+  {
+   "off": 81864,
+   "type": "0x402",
+   "symbol": "__cxa_finalize",
+   "stub": 1632
+  },
+  {
+   "off": 81872,
+   "type": "0x402",
+   "symbol": "dlopen",
+   "stub": 1632
+  },
+  {
+   "off": 81880,
+   "type": "0x402",
+   "symbol": "__cxa_atexit",
+   "stub": 1632
+  },
+  {
+   "off": 81888,
+   "type": "0x402",
+   "symbol": "dlsym",
+   "stub": 1632
+  }
+ ],
+ "imports": [
+  {
+   "dst": 81848,
+   "type": "0x402",
+   "symbol": "dlerror"
+  },
+  {
+   "dst": 81856,
+   "type": "0x402",
+   "symbol": "__errno"
+  },
+  {
+   "dst": 81864,
+   "type": "0x402",
+   "symbol": "__cxa_finalize"
+  },
+  {
+   "dst": 81872,
+   "type": "0x402",
+   "symbol": "dlopen"
+  },
+  {
+   "dst": 81880,
+   "type": "0x402",
+   "symbol": "__cxa_atexit"
+  },
+  {
+   "dst": 81888,
+   "type": "0x402",
+   "symbol": "dlsym"
+  }
+ ]
+}
