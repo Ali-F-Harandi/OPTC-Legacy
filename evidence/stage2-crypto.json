@@ -471,5 +471,36 @@
    }
   ],
   "conclusion": "image holes = BSS (zero by design, phase E) + PLT/GOT/data slots pre-linked at base 0; merged images differ from raw by exactly 2 bytes (init-array slot fill)"
+ },
+ "data1_dat": {
+  "size": 181700,
+  "structure": "4-byte head (0x3ecbf1da LE) + 181696 B body (16-aligned)",
+  "entropy": 7.96,
+  "ruled_out": {
+   "dd70_any_seed": "exhaustive 2^32 sweep, header+tiling oracle (verified on embedded containers), full+body, +/- 4KB trailer slack: 0 hits (668/697 header passes = chance rate)",
+   "outer_container": "count 1..0x100, acc=f(count) head deob, src_off and id-repeat oracles: 0 hits",
+   "stage1_self_keyed": "insane header fields",
+   "stream_cbc_orders": "keys head / f(head^2): entropy unchanged",
+   "aes_shipped_key": "CBC zero-IV / IV variants / ECB: no structure",
+   "zlib_family": "invalid headers"
+  },
+  "seed_global_257e8": "loaded only at 0xdadc/0xdb34/0xde20; never stored - stays 0x14B4 at runtime",
+  "twin": "e2 blob (device 0xf3, 968836 B): same [4B][16-aligned] shape, entropy 8.000 - shared game-side scheme",
+  "consumer": "libgame.so (109MB, obfuscated strings, no AAssetManager imports) - M2 target"
+ },
+ "device_registry": {
+  "register_fn": "FUN_0000f90c(reg, id, ptr, size, flags)",
+  "record": "0x18 B: u32 id, u32 pad, u64 ptr, u32 size, u32 pad",
+  "table": "0x100 records, 0x1800 B, allocated by entry",
+  "access_api": "e1+0xe678 setter / e1+0xe688 getter / e1+0xe694 lookup",
+  "registered": {
+   "0xE2": "stage-2 image buffer + size",
+   "0xD0": "overlay mapping (stage-1 self-walk)",
+   "0x81": "e0",
+   "0x96": "e1",
+   "0xf3": "e2 (register-only)",
+   "0xe3": "e3"
+  },
+  "entry_args_from_stage1": "x0 bootstrap handle, x1 load-base, x2/x3 payload buf/size, x4/x5 module container, x6/x7 overlay mapping"
  }
 }

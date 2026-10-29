@@ -800,8 +800,10 @@ def main():
         seed = container_seed()
         hdr = parse_container_header(c, seed)
         print(f"[*] chain stream->CBC->header: {hdr}")
-        print("[!] NOTE: exact buffer wiring for data1.dat is the remaining M1b item —")
-        print("    see notes/stage2-crypto.md §7.")
+        print("[!] NOTE: data1.dat is NOT this container — exhaustively ruled out")
+        print("    (any dd70 seed / outer format / stage-1 format / stream+CBC /")
+        print("    AES-with-shipped-key / zlib). Game-side scheme in libgame.so;")
+        print("    see notes/stage2-crypto.md §7.6, §10.1, §11.")
 
 
 if __name__ == "__main__":

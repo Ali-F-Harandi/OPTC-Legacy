@@ -28,7 +28,7 @@
    "name": "Anti-tamper loader — lib__7ffe__.so",
    "done": 98,
    "weight": 4,
-   "note": "ALL 4 module blobs decrypted (90/90 entries) AND patch-merged: 0x11b4 builds a 0x518 ctx from 6 patch sections (holes/arrays/strtab/symbols/relocs), 0x3188 runs 8 phases (symaddr build, reloc apply 0x400/0x401/0x402/0x403/0x101/0x104, memset(__bss_start,_edata-__bss_start), mprotect RX/RW, init arrays + __clear_cache). Image 'holes' resolved: BSS (zero by design) + PLT/GOT/data slots pre-linked at base 0 — merged images differ by 2 bytes (init-array fill). Imports mapped (e1 = zlib+dl+pthread). tools/stage2_crypto.py --modules. Remaining: raw 0xf3 blob (969KB register-only), data1.dat seed"
+   "note": "ALL 4 module blobs decrypted+patch-merged (0x11b4/0x3188 chain). data1.dat: exhaustively ruled out for the loader crypto - dd70 with ANY 32-bit seed (vectorized sweep + tiling oracle), outer format, stage-1 self-keyed, stream/CBC orders, AES with shipped key, zlib - all fail. e2 blob (969KB, device 0xf3) is its structural twin ([4B][16-aligned], ent 8.0): shared GAME-SIDE scheme in libgame.so. Device registry protocol reversed (e1+0xe678/e688/e694, {id,ptr,size}x0x100) = the game's entry point into the protector. Seed global [0x257e8] never written - stays 0x14B4. M2: libgame.so consumer + key derivation"
   },
   {
    "id": "signer",

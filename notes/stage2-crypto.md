@@ -238,14 +238,39 @@ entry[+0x20])` indirectly), i.e. these blobs are ARM64 sub-modules.
 
 Reproduce: `python3 tools/stage2_crypto.py <lib__7ffe__.so> --container`.
 
-### 7.6 What this means for `data1.dat`
+### 7.6 `data1.dat` — exhaustively ruled out for the loader crypto (M1b)
 
-`data1.dat` (181,700 B) is **not** this container and is not consumed by
-this chain; it must be loaded later through the game-side path (the
-`FUN_0000dd70` parser + `0xdacc/0xdafc` stream→CBC fragment), probably with
-a different seed than the static `[0x257e8] = 0x14B4`. Its 4-byte head
-(`0x3ecbf1da` LE) is a candidate seed source — next M1b item, now unblocked
-by the clmul-constant fix.
+`data1.dat` (181,700 B = 4-byte head + 181,696 B 16-aligned body,
+entropy ≈ 7.96) is **not** handled by ANY part of the loader's crypto
+stack. Every hypothesis was tested to exhaustion:
+
+| test | method | result |
+|------|--------|--------|
+| dd70 container, any seed | exhaustive 2^32 seed sweep (vectorized header filter + pair-tiling oracle, verified on the embedded containers), full file AND 4-byte-skipped body, with and without 4 KB trailer slack | 0 hits; the 668/697 header-passing seeds equal the pure-chance rate |
+| outer container | entry-count brute force 1..0x100 with `acc = f(count)` head deob, two oracles (first-src = `8+count*0x5C`, id-repeat `w[0]==w[6]`) | 0 hits |
+| stage-1 self-keyed payload | dword-0-key header decrypt, field sanity | insane fields |
+| eb34 stream → fc30 CBC | key = head `0x3ecbf1da`, key = f(head²), both orders, full/body | entropy unchanged 7.95+ |
+| AES-256 directly | shipped schedule, CBC (zero IV / IV=first 16 B / IV=file head) and ECB | no structure |
+| zlib/gzip/raw-deflate | direct decompress | invalid headers |
+
+Companion finding: the **e2 blob** (device id 0xf3, 968,836 B, register-only)
+has the identical shape — `[4 B head][16-aligned body]`, entropy 8.000 —
+so `data1.dat` and e2 share one game-side encryption scheme. Neither is
+referenced anywhere in the reversed surface:
+
+* stage-2 code writes `[0x257e8]` **nowhere** (three load sites only:
+  `0xdadc`, `0xdb34`, `0xde20`) — the seed key stays 0x14B4 at runtime,
+  so "different dd70 seed" is dead independently of the format result;
+* no module image (e0/e1/e3 merged) contains the dd70/stream constants,
+  AES tables, or a CRC32 table;
+* `libgame.so` (109 MB) exports no `AAssetManager_*` symbol and contains
+  no plaintext or single-byte-XOR/ADD "data1"/"7ffe" path;
+* the "data1"/"data2" strings in `classes4.dex` are unreferenced pool
+  entries (no const-string, no static-value use).
+
+The consumer is therefore inside `libgame.so` with heavily obfuscated
+strings — the natural M2 target (see §10.1/§11). The runtime interface
+it would use is the device registry (§10.1).
 
 ## 8. The four module blobs — decrypted (stream→CBC→tree-LZ)
 
@@ -431,6 +456,45 @@ raw image: 0x403 rebases applied at base 0, in-module symbol relocs
 resolved via symbol.value, imports reported unresolved. Only 2 bytes change
 per image (the init-array slot `[1]`); every other 0x403 value is already
 in the image, confirming the pre-linked-at-zero hypothesis.
+
+
+### 10.1 The device registry — the game-side interface (reversed)
+
+`FUN_0000f90c(registry, id, ptr, size, flags)` inserts `{u32 id; u32 pad;
+u64 ptr; u32 size; u32 pad}` records into a `0x1800`-byte table
+(`0x100 x 0x18`) allocated by the entry. The e1 module carries the access
+API (its `fnptr2` family at `e1+0xe678`):
+
+```
+e1+0xe678(x0)      registry = x0                     (setter, returns 1)
+e1+0xe688()        return registry                    (getter)
+e1+0xe694(id, e)   lookup: scan records; id==0 returns the record;
+                   else require ptr!=0 && size!=0; caller reads *(rec+8)
+```
+
+Registered at startup: `0xE2` = (stage-2 image buffer, size) — the
+game can call ANY stage-2 function through it; `0xD0` = (overlay
+mapping, ...) from the stage-1 self-walk; plus the four modules
+`0x81/0x96/0xf3/0xe3` as blobs. Stage-1 passes 8 args to the stage-2
+entry: `x0` = bootstrap handle, `x1` = load-base, `x2/x3` = payload
+buffer/size (device 0xE2), `x4/x5` = embedded module container,
+`x6/x7` = overlay mapping (device 0xD0).
+
+## 11. What remains (M1b -> M2)
+
+* `data1.dat` + e2 decryption — game-side, inside `libgame.so`
+  (109 MB, 38 MB .text, obfuscated strings; no asset API imports).
+  Entry points to try first: the device-registry callers, the
+  `.init_array` mediation hooks, dlopen/dlsym interposition.
+* Runtime function-boundary corrections (this pass, verified by
+  ret/prologue scanning): entry = `0x5d4-0x934`; `0x938` trampoline;
+  `FUN_00000964` = `0x964-0xdbc` (container processor, count from
+  `FUN_000004a0` = 0xE2); `FUN_00000dc8` = `0xdc8-0xf08` (module-image
+  dd70 via entry[8]/[0xC]); `FUN_00000f0c` = `0xf0c-0x1084` (patch
+  installer); `FUN_00001088` = `0x1088-0x11b0` (per-entry loader, sets
+  `[0x25918]`); high region: `FUN_00000d9e0` (chunk pipeline:
+  malloc backup -> eb34 -> fc30 -> ecd8 -> ee70), `FUN_00000dc5c`
+  (chunk iterator), `FUN_00000dd70` (0x5400-byte stack parser).
 
 ## 10. Reproduce
 
