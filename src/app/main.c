@@ -22,19 +22,28 @@ int main(int argc, char **argv)
     const optc_platform *backend = 0;
     const char *backend_name = "?";
 
-#ifdef OPTC_BACKEND_WEB
-    backend = optc_platform_web();
-    backend_name = "web (Emscripten)";
-#else
-    backend = optc_platform_sdl2();
-    backend_name = "sdl2";
-#endif
-    if (!backend) {
+    /* OPTC_BACKEND=null|sdl2 forces a backend — CI and headless boxes use
+     * null so a windowless SDL2 install can't stall the run. */
+    const char *force = getenv("OPTC_BACKEND");
+
+    if (force && strcmp(force, "null") == 0) {
         backend = optc_platform_null();
-        backend_name = "null (headless)";
-        fprintf(stderr,
-                "[desktop] SDL2 not available — falling back to null backend. "
-                "Install SDL2 or run the WASM/Android target for real output.\n");
+        backend_name = "null (forced)";
+    } else {
+#ifdef OPTC_BACKEND_WEB
+        backend = optc_platform_web();
+        backend_name = "web (Emscripten)";
+#else
+        backend = optc_platform_sdl2();
+        backend_name = "sdl2";
+#endif
+        if (!backend) {
+            backend = optc_platform_null();
+            backend_name = "null (headless)";
+            fprintf(stderr,
+                    "[desktop] SDL2 not available — falling back to null backend. "
+                    "Install SDL2 or run the WASM/Android target for real output.\n");
+        }
     }
     printf("[desktop] backend: %s\n", backend_name);
     return backend->run(&cfg);

@@ -32,8 +32,8 @@ jobs:
         run: cmake -S src -B build-desktop -DOPTC_TARGET=desktop -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build-desktop --parallel
-      - name: Smoke test (null backend run)
-        run: ./build-desktop/optc-legacy || true   # SDL2 may open a window — CI-safe
+      - name: Smoke test (forced headless)
+        run: OPTC_BACKEND=null timeout 60 ./build-desktop/optc-legacy
       - uses: actions/upload-artifact@v4
         with:
           name: optc-legacy-desktop-${{ matrix.os }}
