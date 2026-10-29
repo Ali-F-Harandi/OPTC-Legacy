@@ -1,0 +1,49 @@
+{
+ "evidence_id": "ev_m2c_f3_chain",
+ "milestone": "M2c",
+ "subject": "the 38.5MB game blob (f3) — fully decrypted via a 7-level recursive container chain",
+ "trigger_discovery": {
+  "problem": "the f3/e2 blobs are registered raw (flags 0x102) with no consumer doing an id-0xf3 lookup",
+  "solution": "e3's init (entry[7]=+0x23d8, called by the stage-2 orchestrator) calls +0x2330 which does raw_scan(module_id + 0x10, registry) — for e3 (id 0xe3) that is device 0xf3, the raw blob registered by the PREVIOUS entry in the same orchestrator loop. +0x23c0 is a stack-switching trampoline (sub x6,x6,#0x40; mov sp,x6; mov x30,x6; b +0x2084) into e3's private second-level container orchestrator. The orchestrator's id range check (id <= 0xe2) is not an error path — out-of-range ids (0xe3) first wipe that device id (anti-reentrancy) then proceed.",
+  "same_pattern": "e4 (+0x2428 lookup, +0x24b8 trampoline -> +0x20e4 orchestrator), e5, e6, e7, e8 — one processor module per level"
+ },
+ "second_level_container_format": {
+  "head": "8 bytes {w0, w1} at blob start; entries table at +8, 0x5C bytes each (23 dwords), terminated by the first entry that fails to process (the real loop exits when the dd70 decrypt of a misread entry fails)",
+  "seed": "((id*0x9D323CD7) << (id&0xB)) + ((id*0x9D323CD7) >> (id&7)) mod 2^32, where id = the CALLING processor's device id (0xe3 for level 2, 0xe4 for level 3, ...)",
+  "countword": "deob(w0 + w1) ^ (seed + 0xF119421B); head_g = seed + 0x5590AD79 + countword (stored at e3+0x1a314)",
+  "magic_unused": "deob(w0 + 0xCBF0C1D8) ^ (seed + 0x4178CB33) is computed then wiped — never validated",
+  "entry_decode": "per dword j of 23: dec[j] = (0x79934CF6 + j*0xE64D33D8) + head_g + (deob(raw[j] ^ (prev_raw^2 >> 3)) ^ eshift) - (m2 >> ((4j+3)&5)) where prev_raw chains across dwords (0xF02F7685 seeds the chain), eshift = ((head_g+0x96F60B71)*head_g) << ((index+1)&3), m2 = head_g*0x06A55BCC + (head_g+0x96F60B71)*head_g",
+  "fields": "{id, flags, src_off, src_size(=image size, stored bytes are LZ-smaller), dst_off, dst_size, f6, init_fn, fnptr2, ...}",
+  "chained_square_note": "the entry transform squares the PREVIOUS raw dword inside the loop (mul w0,w0,w0 at loop head with w0 = raw[j-1] from the previous iteration) — missing this makes every decode fail"
+ },
+ "processor_module_format": {
+  "trailer": "{0xF4, 0x00000000, 0x000E0100} then a 240-byte private AES-256 schedule at trailer+0xC, then the stream key dword at trailer+0xC+0xF0+0xC",
+  "pipeline": "dd70 modules: seed = sq(stream_key) with the STANDARD stage-2 dd70 head/tree/pair formulas; chunks = stream(stream_key) -> CBC(private schedule) -> tree-LZ scatter (identical to stage-2 semantics, private keys)"
+ },
+ "game_chain": [
+  {"level": 2, "container": "f3 (0x25D3CC0 B, id 0xe3)", "processor": "e3", "stream_key": "0x461f", "modules": {"0x8f": "0x236e8 (13 chunks) — the game runtime library (device 0x8f!)", "0x97": "0x21800 (14)", "0x8e": "0x27508 (21)", "0xe4": "0x1a648 (8) — next processor"}, "next_raw": "0xf4 = 0x25B34A4 B"},
+  {"level": 3, "container": "0xf4 (id 0xe4)", "processor": "e4", "stream_key": "0x39ac", "modules": {"0x2": "0x1a4d8", "0x6a": "placeholder", "0x69": "0x23978", "0x60": "0x24598", "0x68": "0x244e8", "0x40": "0x24738", "0x20": "0x2f238", "0x54": "0x21528", "0x33": "0x382e8", "0xe5": "processor"}, "next_raw": "0xf5 = 0x2544008 B"},
+  {"level": 4, "container": "0xf5 (id 0xe5)", "processor": "e5", "stream_key": "0xb83", "modules": {"0x72": "0x25688", "0x71": "0x19bf0", "0x53": "0x29970", "0xa4": "0x1ea48", "0x58": "0x23228", "0x73": "0x1c4d0", "0xe6": "processor"}, "next_raw": "0xf6 = 0x250C858 B"},
+  {"level": 5, "container": "0xf6 (id 0xe6)", "processor": "e6", "stream_key": "0x2231", "modules": {"0xa0": "0x19ca8", "0xe7": "processor"}, "next_raw": "0xf7 = 0x2503264 B"},
+  {"level": 6, "container": "0xf7 (id 0xe7)", "processor": "e7", "stream_key": "0xe9", "modules": {"0xb2": "0x1118", "0xb0": "0x12018", "0xb9": "0x30B", "0x9d": "RAW 0x1EAFC10 (31.7MB — runtime-consumed)", "0x9e": "0x9C9844 (10.2MB, 2539 chunks — THE GAME ENGINE+SYMBOLS)", "0x9b": "0x207a8", "0xe8": "processor"}, "next_raw": "0xf8 = 0x8F60 B"},
+  {"level": 7, "container": "0xf8 (id 0xe8)", "processor": "e8", "stream_key": "0x6149", "modules": {"0x98": "0x274b8 (18 chunks) — final module"}}
+ ],
+ "protector_chain": "same 7 levels, same module ids/sizes for the shared prefix; keys: e3=0x6c74, e4=0x2c54, e5=0x3cb9, e6=0x5d1f, e7=0x1c96, e8=0x5ce8; the game-specific 0x9d/0x9e are small (0x87f0/0x5e8) — the protector carries only the shell",
+ "game_engine_content": "module 0x9e (L4_m9e_image.bin, 10.2MB): [0,0x300000) tables/data, [0x300000,0x400000) dense ARM64 code (1024/1024 insns), [0x400000+) the C++ symbol/string pool — cocos2d-x, masterdb, leveldb, CRIWare (criAtom/CriMana), bisqueApp UI, Quest/KizunaBattle/PiratesArena/SugoFes game classes with full mangled names",
+ "chunk_failures": "0 across all 57 modules (both sides)",
+ "remaining_encrypted": [
+  "0x9d (31.7MB, level-6 raw): no static processor consumes it (id+0x10 => 0x8d, absent) — decrypted at runtime by the game code (device registered, looked up by decrypted modules)",
+  "0xf8 was consumed by e8; nothing else remains"
+ ],
+ "m2b_correction": "the M2b claim that e3's container formulas were 'constant-folds of stage-2 math' was WRONG: e3's second-level container head/entry formulas are genuinely different (id-derived seed, XOR combinations, chained-square entry transform). The dd70 module parser (e3+0x2d34) does use the standard formulas with seed = sq(stream key). data1.dat remains non-container under BOTH formats (verified: raw dd70 head sweep M1b + the e3-format test on ids 1..0xE3).",
+ "reproduce": [
+  "python3 tools/matryoshka_chain.py   # extracts both sides into m2/f3_chain and m2/e2_chain",
+  "inputs: m2/game_modules/f3_raw_0xf3.bin (game blob) + native-libs/lib__7ffe__.so (protector e2)"
+ ],
+ "next": [
+  "analyze module 0x8f (game runtime library) — the device every e1/e3 dispatcher targets",
+  "analyze 0x9e's internal format (section table at head) and disassemble the engine",
+  "find 0x9d's runtime decryptor inside the decrypted game code (lazy .text/assets restore)",
+  "data1.dat: test the 16-bit-granular cipher hypothesis against the now-decrypted game crypto code"
+ ]
+}

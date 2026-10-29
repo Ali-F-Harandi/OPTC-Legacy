@@ -241,3 +241,64 @@ Notably, **bits 0-1 of every u16 of data1.dat are plaintext bits readable
 without any key** — a 90848-bit known-plaintext surface for future work.
 
 Details: `evidence/m2b-x-sweep.json`.
+
+## 11. M2c — the 38.5 MB game blob: FULLY DECRYPTED (7-level matryoshka)
+
+The consumer hunt closed with the `id+0x10` pattern: **e3's init
+(entry[7] = +0x23d8, invoked by the stage-2 orchestrator right after the
+f3 entry is registered) calls +0x2330, which does
+`raw_scan(own_id + 0x10, registry)`** — for e3 that is device **0xf3**,
+the raw blob registered by the *previous* orchestrator iteration.
+`+0x23c0` is a stack-switching trampoline (`sub x6,x6,#0x40; mov sp,x6;
+mov x30,x6; b +0x2084`) into e3's **private second-level container
+orchestrator** with the f3 blob as the container and id = 0xe3 (the
+out-of-range id check merely wipes that device first — anti-reentrancy).
+Every level carries an `eN+1` processor module that recurses into the
+next `fN+1` raw blob the same way.
+
+### The second-level container format (genuinely new — M2b's
+"constant-folded" verdict was wrong for the wrapper)
+
+```
+head (8 B): {w0, w1}
+  seed       = ((id*0x9D323CD7) << (id&0xB)) + ((id*0x9D323CD7) >> (id&7))
+  countword  = deob(w0 + w1) ^ (seed + 0xF119421B)
+  head_g     = seed + 0x5590AD79 + countword        (kept at e3+0x1a314)
+entries: n x 0x5C (23 dwords) at +8, terminated by the first entry whose
+  processing would fail (the real loop exits on dd70 failure)
+  dec[j] = (0x79934CF6 + j*0xE64D33D8) + head_g
+         + (deob(raw[j] ^ (raw[j-1]^2 >> 3)) ^ eshift)
+         - (m2 >> ((4j+3)&5))
+  with raw[-1] = 0xF02F7685 (CHAINED SQUARE — squares the *previous*
+  raw dword), eshift = ((head_g+0x96F60B71)*head_g) << ((index+1)&3),
+  m2 = head_g*0x06A55BCC + (head_g+0x96F60B71)*head_g
+modules: dd70 with seed = sq(processor's stream key); chunks =
+  stream(key) -> CBC(processor's private AES-256) -> tree-LZ scatter.
+```
+
+Each `eN` processor carries `{0xF4, 0, 0x000E0100}` + a private 240-byte
+schedule at +0xC and its stream key at +0x108 — per-side, per-level keys:
+
+| level | container | id | processor | game key | prot key |
+|---|---|---|---|---|---|
+| 2 | f3 38.5 MB | 0xe3 | e3 | 0x461f | 0x6c74 |
+| 3 | 0xf4 38.4 MB | 0xe4 | e4 | 0x39ac | 0x2c54 |
+| 4 | 0xf5 37.1 MB | 0xe5 | e5 | 0xb83  | 0x3cb9 |
+| 5 | 0xf6 36.8 MB | 0xe6 | e6 | 0x2231 | 0x5d1f |
+| 6 | 0xf7 36.8 MB | 0xe7 | e7 | 0xe9   | 0x1c96 |
+| 7 | 0xf8 36 KB   | 0xe8 | e8 | 0x6149 | 0x5ce8 |
+
+### Results (0 chunk failures in 57 modules, both sides)
+
+* **0x9e** (10.2 MB, 2539 chunks): the game engine — `[0,0x300000)`
+  tables, `[0x300000,0x400000)` dense ARM64, `[0x400000+)` the full C++
+  symbol pool: cocos2d-x, masterdb, leveldb, CRIWare, bisqueApp UI,
+  Quest/KizunaBattle/PiratesArena game classes.
+* **0x8f** (145 KB): the game runtime library — the device 49 e1
+  dispatchers + 7 e3 dispatchers call into.
+* **0x9d** (31.7 MB, level-6 raw): still encrypted — consumed at runtime
+  by the decrypted game code (lazy restore of .text/assets).
+* Module ids per level are the REAL device registry ids.
+
+Reproduce: `python3 tools/matryoshka_chain.py`
+(→ `m2/f3_chain/`, `m2/e2_chain/`). Details: `evidence/m2c-f3-chain.json`.
