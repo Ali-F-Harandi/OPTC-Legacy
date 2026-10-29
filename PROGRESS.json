@@ -26,9 +26,9 @@
   {
    "id": "loader-7ffe",
    "name": "Anti-tamper loader — lib__7ffe__.so",
-   "done": 93,
+   "done": 95,
    "weight": 4,
-   "note": "M1b core DONE: stage-2 crypto architecture fully reversed — AES-256 T-tables byte-exact standard, shipped decrypt-order schedule inverted to master key (60/60 re-expansion, FIPS-197 PASS), stream cipher + GF(2^32) deobfuscator + LZ77 layer reimplemented; data1.dat buffer hand-off tracing remains"
+   "note": "M1b hand-off RESOLVED: the stage-2 entry receives a ~1 MB embedded-module container (file 0x9B1EC, exact LOUSER+0 remainder) — head decoder 0x13f0 + entry reader 0x15f4 + orchestrator 0x964 reversed, 4 module entries parsed (ids 0x81/0x96/0xf3/0xe3); clmul deob constant corrected to 0x94511DD2; AES-256 master key + FIPS-197 PASS unchanged; remaining: decrypt the 4 module blobs + data1.dat seed"
   },
   {
    "id": "signer",
@@ -61,9 +61,9 @@
   {
    "id": "asset-formats",
    "name": "Asset formats & pipelines",
-   "done": 24,
+   "done": 26,
    "weight": 12,
-   "note": ".idx chunk format + 7ffe container format reversed (unpack_7ffe.py); 39.9 MB engine blob + data1.dat still encrypted"
+   "note": ".idx chunk format + 7ffe container format reversed (unpack_7ffe.py); embedded-module container parsed end-to-end (4 ARM64 sub-modules, still encrypted); 39.9 MB engine blob + data1.dat still encrypted"
   },
   {
    "id": "build-android",
@@ -126,7 +126,7 @@
   {
    "label": "Stage-2 protector (1 cell = 10 functions, 269 total)",
    "total": 27,
-   "done": 5,
+   "done": 8,
    "in_progress": 2,
    "per_row": 27
   }

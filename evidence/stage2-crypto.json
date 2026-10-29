@@ -18,7 +18,9 @@
   {"range": "0x256b0-0x25738", "role": "import names: liblog.so libstdc++.so libm.so libc.so libz.so libdl.so"},
   {"range": "0x257e0-0x257ec", "role": "config: 0x55, 0x26, 0x14B4 (stream key/seed), 0"},
   {"range": "0x257f0-0x258e4", "role": "shipped AES-256 context"},
-  {"range": "0x258f0-0x258f4", "role": "u32 0xF4 = sizeof(ctx)"}
+  {"range": "0x258f0-0x258f4", "role": "u32 0xF4 = sizeof(ctx)"},
+  {"range": "0x258f8-0x25918", "role": "runtime globals set by ENTRY: obj ptr, container ptr, container len, 0x1800 scratch ptr"},
+  {"range": "0x2591c", "role": "container runtime seed = deob_head_w1 + acc, written by 0x13f0 at boot"}
  ],
  "crypto": {
   "aes": {
@@ -58,7 +60,8 @@
   "gf232_deobfuscator": {
    "function": "0x181c",
    "algorithm": "carry-less multiply, reduction polynomial 0x579357EB",
-   "header_wrapper": "0x176c = clmul32(0x09451DD2, v)",
+   "header_wrapper": "0x176c = clmul32(0x94511DD2, v)",
+   "header_wrapper_correction": "earlier evidence said 0x09451DD2 (dropped digit); movz 0x1dd2 + movk 0x9451 lsl 16 = 0x94511DD2",
    "keytable_wrapper": "0x1d40 (const 0x36DCAC9C)"
   },
   "lz": {
@@ -73,16 +76,49 @@
   "pipeline_fragment": ["0xdacc", "0xdafc"],
   "seed": "((x*x)>>17) ^ ((x*x)<<11), x=[0x257e8]=0x14B4",
   "header_formulas": {
-   "d0_total_size": "seed*0xF87B337C + (0xA21DFB3A << (seed&7)) + clmul(0x09451DD2, w0)",
-   "d1_count_flags": "((0x416E2AF2 >> (seed&0xD)) + seed + 0xBD19C63C) ^ clmul(0x09451DD2, w1)",
-   "d2_keytable_size": "((0x643A3A3B << (seed&0xB)) - (seed ^ 0x3B2BF538)) + clmul(0x09451DD2, w2)"
+   "d0_total_size": "seed*0xF87B337C + (0xA21DFB3A << (seed&7)) + clmul(0x94511DD2, w0)",
+   "d1_count_flags": "((0x416E2AF2 >> (seed&0xD)) + seed + 0xBD19C63C) ^ clmul(0x94511DD2, w1)",
+   "d2_keytable_size": "((0x643A3A3B << (seed&0xB)) - (seed ^ 0x3B2BF538)) + clmul(0x94511DD2, w2)"
   },
   "sanity": "0 < count <= 0x100; 0 < key_table_size <= 0x1B00",
   "data1_dat": {
    "size": 181700,
    "structure": "4 + 181696 (tail exactly 16-byte aligned = 11356 AES blocks)",
-   "status": "chain stages individually verified; exact buffer hand-off into the pipeline fragment remains to be traced (0x165c source reader / 4-byte head)"
+   "status": "NOT the embedded container (see embedded_module_container); loaded later via the game-side path, seed unknown — 4-byte head 0x3ecbf1da is a candidate"
   }
+ },
+ "embedded_module_container": {
+  "location": "lib__7ffe__.so file [0x9B1EC, 0x1A2048) = the LOUSER+0 bytes after the stage-2 blob",
+  "size": 1076828,
+  "handoff": "stage-1 blr x8 @0x1c68: x4 = payload + align4(hdr[+8]+hdr[+0xC]) = 0x9B1EC; x5 = plen-0x25990 = 0x106E5C (exact LOUSER remainder)",
+  "activation_chain": ["ENTRY 0x5d4", "0x938", "trampoline 0x550", "0x4a0 (count=0xE2 hardcoded)", "0x964 orchestrator", "0x13f0 head decoder", "0x15f4 entry reader"],
+  "layout": "[8B obfuscated head][4 x 0x5C obfuscated entries][~1MB encrypted blobs]",
+  "head_decoder": {
+   "function": "0x13f0",
+   "acc_formula": "((cnt*0x9D323CD7 >> (cnt&7)) + 0x5E727D74 + (cnt*0x9D323CD7 << (cnt&0xB)) + 0xF71E3005) mod 2^32, cnt=0xE2",
+   "word_transform": "w = clmul(0x94511DD2, (w + st)); w ^= (i+1)*0xEBE81DBA + acc; st = raw (init 0xCBF0C1D8)",
+   "runtime_seed": "[0x2591c] = deob_w1 + acc = 0xaecbff4b"
+  },
+  "entry_reader": {
+   "function": "0x15f4 (0x165c is mid-function loop body)",
+   "signature": "(src, index, dst), block = 0x5C bytes",
+   "word_transform": "w ^= (st*st)>>3 [32-bit mul THEN shift]; w = clmul(0x94511DD2, w); w ^= ((seed+0x96F60B71)*seed) << ((index+1)&3); w += (off+1)*0x79934CF6 + seed; w -= ((seed+0x9D9B673D)*seed) >> ((off+3)&5) [32-bit mul THEN shift]; st = raw (init 0xF02F7685)"
+  },
+  "entry_word_map": {
+   "+0x00": "device id", "+0x04": "flags (bit1 = blob at +8, bit8 = register-only)",
+   "+0x08": "src offset (from container+8)", "+0x0C": "src size",
+   "+0x10": "dst offset", "+0x14": "dst size",
+   "+0x18": "id repeat", "+0x1C": "init-fn offset in blob", "+0x20": "second fn-ptr offset in blob"
+  },
+  "entries": [
+   {"id": "0x81", "flags": "0x20000", "src_off": "0x178", "src_size": "0x140d8", "dst_off": "0x2ef4", "dst_size": "0x2b2", "file_off": "0x9b36c"},
+   {"id": "0x96", "flags": "0x0", "src_off": "0x3428", "src_size": "0x2a870", "dst_off": "0x1443c", "dst_size": "0xe10", "fnptr2": "0xe678", "file_off": "0x9e61c"},
+   {"id": "0xf3", "flags": "0x102", "src_off": "0x14fdc", "src_size": "0xec884", "file_off": "0xb01d0", "note": "969KB big module, register-only (bit8)"},
+   {"id": "0xe3", "flags": "0x0", "src_off": "0x101860", "src_size": "0x1a638", "dst_off": "0x1067c0", "dst_size": "0x811", "init_fn": "0x23d8", "fnptr2": "0x5ad8", "file_off": "0x19ca54"}
+  ],
+  "cross_check": "entry[0].src_off = 0x178 = 8 + 4*0x5C (table ends exactly after 4 entries); entry[2] end = entry[3].src_off",
+  "blob_state": "all four blobs entropy ~7.95 b/B — still encrypted; stream/AES pipeline is the next M1b item",
+  "device_registry": {"register": "0xf90c", "release": "0xfa20", "scratch": "0x1800 bytes = 256 x 24B records (0x1088 fills)"}
  },
  "anti_analysis": [
   "no dynamic-linker imports: liblog/libstdc++/libm/libc/libz/libdl resolved by hand-rolled ELF scanner 0x29a0 + private relocation processor 0x5024",

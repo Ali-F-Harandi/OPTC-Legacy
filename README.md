@@ -15,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 25.4% decompiled & rebuilt**
+**Overall — 25.8% decompiled & rebuilt**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  25.4%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  25.8%
 ```
 
 | Module | Progress | Status |
@@ -26,12 +26,12 @@
 | Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
 | Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
-| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜` 93% | M1b core DONE: stage-2 crypto architecture fully reversed — AES-256 T-tables byte-exact standard, shipped decrypt-order schedule inverted to master key (60/60 re-expansion, FIPS-197 PASS), stream cipher + GF(2^32) deobfuscator + LZ77 layer reimplemented; data1.dat buffer hand-off tracing remains |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨` 95% | M1b hand-off RESOLVED: the stage-2 entry receives a ~1 MB embedded-module container (file 0x9B1EC, exact LOUSER+0 remainder) — head decoder 0x13f0 + entry reader 0x15f4 + orchestrator 0x964 reversed, 4 module entries parsed (ids 0x81/0x96/0xf3/0xe3); clmul deob constant corrected to 0x94511DD2; AES-256 master key + FIPS-197 PASS unchanged; remaining: decrypt the 4 module blobs + data1.dat seed |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
 | Engine core — libgame.so | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 4% | section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 24% | .idx chunk format + 7ffe container format reversed (unpack_7ffe.py); 39.9 MB engine blob + data1.dat still encrypted |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 26% | .idx chunk format + 7ffe container format reversed (unpack_7ffe.py); embedded-module container parsed end-to-end (4 ARM64 sub-modules, still encrypted); 39.9 MB engine blob + data1.dat still encrypted |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
@@ -64,10 +64,10 @@
 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨⬜⬜
 ```
 
-**Stage-2 protector (1 cell = 10 functions, 269 total)** — 5/27 (18.5%)
+**Stage-2 protector (1 cell = 10 functions, 269 total)** — 8/27 (29.6%)
 
 ```text
-🟩🟩🟩🟩🟩🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 ```
 
 <sub>Regenerate with `python3 tools/progress.py --write`. Percentages are measured against concrete units (classes, functions, formats, build targets) — never vibes.</sub>

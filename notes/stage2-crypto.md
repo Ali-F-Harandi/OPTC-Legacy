@@ -1,9 +1,11 @@
 # Stage-2 Protector — Crypto Architecture (M1b)
 
-> Status: **crypto core fully reversed & verified** (AES-256 master key
-> recovered, FIPS-197 vector passes). Remaining: exact buffer wiring for
-> `data1.dat` (§7). Pseudocode: `decomp/native-loader-7ffe-stage2/`
-> (269 auto + 67 forced functions). Tooling: `tools/stage2_crypto.py`.
+> Status: **crypto core + embedded-module container reversed & verified**
+> (AES-256 master key recovered, FIPS-197 passes, the ~1 MB container after
+> the stage-2 blob parses end-to-end). Remaining: decrypt the four embedded
+> module blobs (stream/AES pipeline), and the separate `data1.dat` seed
+> (§7.6). Pseudocode: `decomp/native-loader-7ffe-stage2/` (269 auto + 67
+> forced functions). Tooling: `tools/stage2_crypto.py`.
 
 ## 1. Target
 
@@ -29,6 +31,7 @@ Memory map of the decrypted image:
 | `0x257e0–0x257ec` | config words: `0x55`, `0x26`, `0x14B4` (stream key / seed base), `0` |
 | `0x257f0–0x258e4` | **shipped AES-256 context** (§4) |
 | `0x258f0` | `u32 = 0xF4` — sizeof(ctx), cross-check |
+| `0x258f8–0x2591c` | runtime globals set by ENTRY: obj ptr, **container ptr**, container len, `0x1800` scratch ptr, `[0x2591c]` = container runtime seed (§7) |
 
 ## 2. Crypto inventory (all identified)
 
@@ -42,8 +45,13 @@ Memory map of the decrypted image:
 | `0x000104a0` | — | rounds-from-keysize: 10/12/14 |
 | `0x0000eb34` | `FUN_0000eb34` | additive/XOR dword stream cipher, evolving key (§5) |
 | `0x0000181c` | `FUN_000181c` | GF(2^32) carry-less multiply, reduction poly `0x579357EB` |
-| `0x0000176c` | `FUN_0000176c` | header-dword deobfuscator: `clmul32(0x09451DD2, v)` |
+| `0x0000176c` | `FUN_0000176c` | header-dword deobfuscator: `clmul32(0x94511DD2, v)` |
 | `0x00001d40` | `FUN_00001d40` | second deobfuscator (const `0x36DCAC9C`, used for the key table) |
+| `0x000015f4` | `FUN_000015f4` | container entry reader: 0x5C-byte block, seeded clmul formulas (§7.4) |
+| `0x000013f0` | `FUN_000013f0` | container head decoder + runtime seed `[0x2591c]` (§7.3) |
+| `0x00000964` | `FUN_00000964` | container orchestrator: parse entries, register devices, run init fns |
+| `0x0000f90c` | `FUN_0000f90c` | device registry: register (id, buffer, size, flags) |
+| `0x0000fa20` | `FUN_0000fa20` | device registry: release / zero a device |
 | `0x0000f9f4` | `FUN_0000f9f4` | LZ77/RLE decompressor (§6) |
 | `0x0000f444` | `FUN_0000f444` | per-blob dispatch: plain memcpy when sizes match, else LZ |
 | `0x0000dd70` | `FUN_0000dd70` | container parser with seeded header formulas (§7) |
@@ -120,41 +128,122 @@ accumulation, `0x200` RLE with 1/2/4-byte fills, `0x300` windowed copy
 with negative displacement. `FUN_0000f444` picks between memcpy (when
 `src_size == dst_size`) and this decompressor per container entry.
 
-## 7. `data1.dat` — container format & remaining work
+## 7. The embedded-module container — the M1b hand-off, resolved
 
-`assets/7ffe/data1.dat` (181,700 B = 4 + 181,696, tail exactly 16-aligned)
-is processed by the loader-pipeline fragment (`0xdacc/0xdafc`, confirmed
-from raw assembly):
+The open question ("which buffer does the stream→CBC→LZ pipeline receive?")
+is answered: **not `data1.dat`**. The buffer is a ~1 MB container embedded
+in `lib__7ffe__.so` itself, directly after the stage-2 blob, and it is
+consumed at boot by a *different* (formula-based, no stream/AES) parser.
 
-```
-FUN_0000eb34(key=[0x257e8], buf, size)          # stream decrypt
-FUN_0000fc30(buf, size, &ctx@0x257f0, 0xF4)     # AES-256-CBC, zero IV
-FUN_0000ecd8(...)                               # per-entry extract (LZ)
-```
+### 7.1 Where the buffer comes from
 
-The container header parser (`FUN_0000dd70`) decodes three dwords with
-seed `= ((x*x)>>17) ^ ((x*x)<<11)` where `x = [0x257e8]`, each dword first
-passing the `clmul32(0x09451DD2, ·)` deobfuscator:
+The stage-1 bootstrap (file `0x163c`, vaddr confusion in earlier notes) ends
+with the only indirect call in the whole library, `blr x8 @ 0x1c68`, with:
 
 ```
-d0 → total_size = seed*0xF87B337C + (0xA21DFB3A << (seed&7)) + deob(w0)
-d1 → count|flags<<8     = ((0x416E2AF2 >> (seed&0xD)) + seed + 0xBD19C63C) ^ deob(w1)
-d2 → key_table_size     = ((0x643A3A3B << (seed&0xB)) - (seed ^ 0x3B2BF538)) + deob(w2)
+x4 = payload + align4(hdr[+8] + hdr[+0xC]) = file 0x7585C + 0x20 + 0x25970
+   = file 0x9B1EC                    (first byte after the stage-2 blob)
+x5 = plen - 0x25990 = 0x106E5C       (exactly the remaining LOUSER+0 bytes)
 ```
 
-followed by a `key_table_size`-byte key table (own deobfuscator), a
-`count × (offset,size,dst_size,flags)` entry table, and the blob region.
+Cross-check: LOUSER+0 section `[0x75620, 0x1A2048)` = `0x23C` prefix +
+`0x20` mini-header + `0x25970` stage-2 blob + `0x106E5C` container. ✓
 
-**Open item (M1b finish line):** applying `stream → CBC` to the file bytes
-directly does not yet yield a header that satisfies the parser's sanity
-constraints (`0 < count ≤ 0x100`, `0 < key_table ≤ 0x1B00`). Every
-individual stage is implemented and verified in isolation (stream cipher
-matches the assembly; AES passes FIPS-197; header formulas match the
-assembly), so the remaining unknown is the exact hand-off — most likely the
-buffer the pipeline receives is *not* the raw file start (the 4-byte
-head, or a chunk produced by the `0xf38` dispatcher's `FUN_0000165c`
-source reader). Next step: force-decompile `FUN_0000165c` /
-`FUN_0000ee70` and trace the buffer provenance.
+### 7.2 The activation chain (all reversed this pass)
+
+```
+ENTRY 0x5d4(x0..x7)
+  ├─ [0x258f8]=&obj32, [0x25900]=x4 (container), [0x25908]=x5 (len),
+  │  [0x25910]=mmap(0x1800) scratch
+  └─ FUN_00000938 → trampoline 0x550 (saves x1..x28, passes &regs)
+        └─ FUN_000004a0(regs)
+              └─ FUN_00000964(obj, count=0xE2, container, len, 0, scratch)
+                    ├─ FUN_000013f0(0xE2, container, _, &src)
+                    │     acc = f(count); deob 8-byte head in place;
+                    │     [0x2591c] = deob_w1 + acc   ← runtime seed
+                    │     src = container + 8          ← THE hand-off
+                    └─ loop: FUN_000015f4(src, i, entry)
+```
+
+`0xE2` (226) is *not* an entry count — it is only a seed ingredient (and the
+`count-1 > 0xE1` check that gates a `fa20` device-release never fires for
+it). The real terminator is the `ok` flag: a failed
+register/init call ends the loop. In the shipped build **4 entries** parse
+cleanly, and `entry[0].src_off = 0x178 = 8 + 4×0x5C` — the table is exactly
+as long as those 4 entries. ✓
+
+### 7.3 Head decoder — `FUN_000013f0`
+
+```c
+acc  = ((count*0x9D323CD7 >> (count&7)) + 0x5E727D74
+      + (count*0x9D323CD7 << (count&0xB)) + 0xF71E3005)      // mod 2^32
+st   = 0xCBF0C1D8;
+for (i = 0; i < 8; i += 4) {                 // 2 dwords, in place
+    w   = head[i/4];
+    w   = clmul_deob(w + st);                // clmul32(0x94511DD2, ·)
+    w  ^= (i+1)*0xEBE81DBA + acc;
+    st  = raw_w;                             // rolling state = previous RAW
+}
+[0x2591c] = word[1] + acc;                   // seed for the entry reader
+```
+
+### 7.4 Entry reader — `FUN_000015f4` (the misnamed "0x165c")
+
+`0x165c` is mid-function; the real function starts at `0x15f4`
+`(src, index, dst)`: copies `src + index*0x5C` (92 bytes) to `dst`, then
+deobfuscates in place, seed = `[0x2591c]`:
+
+```c
+st = 0xF02F7685;
+for (off = 0; off < 0x5C; off += 4) {
+    w   = dst[off/4];
+    w  ^= (st*st) >> 3;                      // 32-bit mul, THEN shift
+    w   = clmul_deob(w);
+    w  ^= ((seed + 0x96F60B71)*seed) << ((index+1)&3);
+    w  += (off+1)*0x79934CF6 + seed;
+    w  -= ((seed + 0x9D9B673D)*seed) >> ((off+3)&5);   // 32-bit mul, THEN shift
+    st  = raw_w;
+}
+```
+
+⚠ Two implementation traps (both hit during re-implementation): every
+multiply is truncated to 32 bits **before** the logical shifts, and the
+clmul operand is `0x94511DD2` (`movz 0x1dd2; movk 0x9451,lsl16`) — the
+earlier notes/tools dropped a digit (`0x09451DD2`), which silently broke
+every formula-based parse attempt of the previous session.
+
+### 7.5 Container layout & the four modules
+
+```
+[8 B obfuscated head]
+[4 × 0x5C obfuscated entries]
+[~1 MB high-entropy blobs (7.95 b/B — encrypted)]
+```
+
+| # | id | flags | src range (container-rel) | dst | init_fn | role |
+|---|----|-------|---------------------------|-----|---------|------|
+| 0 | 0x81 | 0x20000 | `[0x178, +0x140d8)` | `0x2ef4/+0x2b2` | — | module A |
+| 1 | 0x96 | 0x0 | `[0x3428, +0x2a870)` | `0x1443c/+0xe10` | `+0xe678` | module B |
+| 2 | 0xf3 | 0x102 | `[0x14fdc, +0xec884)` | — | — | big module (969 KB, register-only) |
+| 3 | 0xe3 | 0x0 | `[0x101860, +0x1a638)` | `0x1067c0/+0x811` | `+0x23d8`, `+0x5ad8` | module D |
+
+Entry word map: `+0 id, +4 flags (bit1 = blob-at-+8, bit8 = register-only),
++8 src_off, +0xC src_size, +0x10 dst_off, +0x14 dst_size, +0x18 id repeat,
++0x1C init-fn offset, +0x20 second fn-ptr offset`. The loader registers each
+blob as a "device" (`FUN_0000f90c`, id-keyed table) and — unless bit 8 —
+calls `blob + entry[+0x1C]` as an init function (and `*(blob +
+entry[+0x20])` indirectly), i.e. these blobs are ARM64 sub-modules.
+
+Reproduce: `python3 tools/stage2_crypto.py <lib__7ffe__.so> --container`.
+
+### 7.6 What this means for `data1.dat`
+
+`data1.dat` (181,700 B) is **not** this container and is not consumed by
+this chain; it must be loaded later through the game-side path (the
+`FUN_0000dd70` parser + `0xdacc/0xdafc` stream→CBC fragment), probably with
+a different seed than the static `[0x257e8] = 0x14B4`. Its 4-byte head
+(`0x3ecbf1da` LE) is a candidate seed source — next M1b item, now unblocked
+by the clmul-constant fix.
 
 ## 8. Reproduce
 
@@ -162,6 +251,8 @@ source reader). Next step: force-decompile `FUN_0000165c` /
 python3 tools/unpack_7ffe.py lib__7ffe__.so out/        # M1  → payload
 python3 tools/stage2_crypto.py out/7ffe-payload.dec --fips
 # → schedule match 60/60, master key, FIPS PASS
+python3 tools/stage2_crypto.py lib__7ffe__.so --container
+# → embedded module container: head, seed, 4 entries with blob ranges
 ```
 
 Evidence: `evidence/stage2-crypto.json`.
