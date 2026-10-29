@@ -9,6 +9,7 @@
 
 #include "../platform.h"
 #include <SDL.h>
+#include <SDL_opengl.h>
 
 static int sdl2_run(const optc_engine_config *cfg)
 {
@@ -52,7 +53,7 @@ static int sdl2_run(const optc_engine_config *cfg)
         optc_engine_tick(1.0 / 60.0);
         /* Milestone-0 clear color: Bisque "blue" as a placeholder. */
         glClearColor(0.10f, 0.32f, 0.63f, 1.0f);
-        glClear(0x00004000u /* GL_COLOR_BUFFER_BIT */);
+        glClear(GL_COLOR_BUFFER_BIT);
         SDL_GL_SwapWindow(win);
     }
 

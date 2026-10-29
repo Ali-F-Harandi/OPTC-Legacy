@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.0.4
+          version: latest
       - name: Configure
         run: emcmake cmake -S src -B build-web -DOPTC_TARGET=web -DCMAKE_BUILD_TYPE=Release
       - name: Build
@@ -70,18 +70,18 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
-      - name: Build unsigned-release APK (NDK + CMake wired by Gradle)
+      - name: Accept Android SDK licenses (SDK is preinstalled on the runner)
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+      - name: Build signed-release APK (NDK + CMake auto-installed by Gradle)
         working-directory: android
-        run: |
-          gradle wrapper --gradle-version 8.9 || true
-          ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
       - name: Verify our signature
         run: |
           APK=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
-          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --print-certs "$APK" || true
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs "$APK" || true
       - uses: actions/upload-artifact@v4
         with:
           name: optc-legacy-android-apk
           path: android/app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn   # first green run lands when Gradle wrapper is committed
+          if-no-files-found: warn
