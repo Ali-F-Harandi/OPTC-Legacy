@@ -1,0 +1,27 @@
+{
+ "source": "/home/z/my-project/download/re-work/native-libs/lib__7ffe__.so",
+ "louser_section": {
+  "offset": 480800,
+  "size": 1231400
+ },
+ "payload_header": {
+  "file_offset": 481372,
+  "self_key": "0x7f8c",
+  "magic": "0x7f8c",
+  "data_offset": 32,
+  "size": 153968,
+  "key": 22259,
+  "entry_offset": 1492,
+  "mprotect_len": 87408
+ },
+ "algorithm": {
+  "name": "dword add+xor stream (FUN_00101520)",
+  "add_stream": "(i+3)*key mod 2^32",
+  "xor_stream": "(i+1)*0xbf20165d mod 2^32"
+ },
+ "result": {
+  "magic_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+  "entropy_note": null,
+  "printable_ratio_head": 0.2318
+ }
+}

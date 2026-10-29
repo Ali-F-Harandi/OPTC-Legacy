@@ -1,0 +1,56 @@
+name: deploy-web
+
+# Auto-publish the Web (WASM) build to GitHub Pages on every push to main.
+# Live at: https://ali-f-harandi.github.io/OPTC-Legacy/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build web bundle for Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+      - name: Configure
+        run: emcmake cmake -S src -B build-web -DOPTC_TARGET=web -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-web --parallel
+      - name: Stage site
+        run: |
+          mkdir -p site
+          cp build-web/optc-legacy.html site/index.html
+          cp build-web/optc-legacy.js  site/
+          cp build-web/optc-legacy.wasm site/
+          printf '%s\n' 'OPTC Legacy web build — see repo README for details' > site/README.txt
+          touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

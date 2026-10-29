@@ -22,22 +22,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - name: Install SDL2 (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libsdl2-dev libgl1-mesa-dev
-      - name: Configure
+      - name: Install SDL2 (Windows, via vcpkg)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:VCPKG_INSTALLATION_ROOT = "C:\vcpkg"
+          vcpkg install sdl2:x64-windows
+      - name: Configure (Windows + vcpkg + Ninja)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          cmake -S src -B build-desktop -G Ninja -DOPTC_TARGET=desktop
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          -DVCPKG_TARGET_TRIPLET=x64-windows
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
         run: cmake -S src -B build-desktop -DOPTC_TARGET=desktop -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build-desktop --parallel
       - name: Smoke test (forced headless)
+        shell: bash
         run: OPTC_BACKEND=null ./build-desktop/optc-legacy
       - uses: actions/upload-artifact@v4
         with:
           name: optc-legacy-desktop-${{ matrix.os }}
-          path: build-desktop/optc-legacy
+          path: |
+            build-desktop/optc-legacy
+            build-desktop/optc-legacy.exe
           if-no-files-found: error
 
   web:

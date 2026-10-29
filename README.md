@@ -3,7 +3,9 @@
 **A community decompilation & recompilation project for ONE PIECE TREASURE CRUISE-RPG 16.2.1 — with custom rebuilds for Android, Web and Desktop.**
 
 [![build](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/build.yml/badge.svg)](../../actions)
-[![progress](https://img.shields.io/badge/decompilation-23.1%25-blue)](PROGRESS.json)
+[![deploy-web](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/deploy-pages.yml/badge.svg)](../../actions/workflows/deploy-pages.yml)
+[![play](https://img.shields.io/badge/play-web%20build%20%28WASM%29-6ea8ff?logo=githubpages&logoColor=white)](https://ali-f-harandi.github.io/OPTC-Legacy/)
+[![progress](https://img.shields.io/badge/decompilation-25.2%25-blue)](PROGRESS.json)
 [![target](https://img.shields.io/badge/target-16.2.1%20%221621%22-critical)](hashes.txt)
 [![license](https://img.shields.io/badge/legal-clean--room%20RE-important)](#legal)
 
@@ -13,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 23.1% decompiled & rebuilt**
+**Overall — 25.2% decompiled & rebuilt**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  23.1%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  25.2%
 ```
 
 | Module | Progress | Status |
@@ -24,16 +26,16 @@
 | Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
 | Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
-| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜` 75% | 277/277 functions pseudocoded; data1.dat key schedule still unknown |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 88% | M1 DONE: bootstrap chain + cipher reversed; stage-2 (150 KB ARM64) decrypts clean; data1.dat key lives in stage-2 (M1b) |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
 | Engine core — libgame.so | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 4% | section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 18% | .idx chunk format reversed; 39.9 MB engine blob + data1.dat extracted, encrypted |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 24% | .idx chunk format + 7ffe container format reversed (unpack_7ffe.py); 39.9 MB engine blob + data1.dat still encrypted |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
-| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 45% | blob extractor, progress tracker, 3-target CI matrix |
+| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜` 58% | unpacker + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy |
 | Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 40% | architecture map + engine deep-dive notes published |
 
 **Platform shell — jp.co.drecom.bisque (1 cell = 1 class)** — 9/187 (4.8%)
@@ -49,11 +51,11 @@
 ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 ```
 
-**Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)** — 42/56 (75.0%)
+**Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)** — 49/56 (87.5%)
 
 ```text
 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
-🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨🟨⬜⬜⬜⬜
 ```
 
 **API signer — libsigner.so (1 cell = 20 functions, 519 total)** — 22/26 (84.6%)
@@ -134,13 +136,14 @@ per-method dossiers.
 
 Deep-dives: [`notes/architecture.md`](notes/architecture.md) ·
 [`notes/engine-analysis.md`](notes/engine-analysis.md) ·
+[`notes/7ffe-loader.md`](notes/7ffe-loader.md) ·
 [`notes/asset-format.md`](notes/asset-format.md)
 
 ## Repository layout
 
 ```text
 ├── PROGRESS.json          progress source of truth (units, not vibes)
-├── tools/                 fetch / extract / keystore / progress tooling
+├── tools/                 fetch / extract / unpack-7ffe / keystore / progress
 ├── evidence/              REA evidence — inventories, class & method dossiers
 ├── notes/                 architecture, engine & asset-format write-ups
 ├── decomp/                decompiler output (Ghidra pseudocode, per function)
@@ -162,12 +165,15 @@ Deep-dives: [`notes/architecture.md`](notes/architecture.md) ·
 One `src/` tree, three targets. Milestone 0 (registry boots on all three) is
 green; the wall above tracks what each target can actually *do*.
 
-### Desktop (Linux/macOS)
+### Desktop (Linux / macOS / Windows)
 
 ```bash
 desktop/build.sh          # → build-desktop/optc-legacy (SDL2, or null headless)
 ./build-desktop/optc-legacy
 ```
+
+CI builds and smoke-tests all three desktop OSes (Linux via apt SDL2,
+macOS via system frameworks, Windows via vcpkg SDL2 + Ninja/MSVC).
 
 ### Web (Emscripten/WASM)
 
@@ -175,6 +181,9 @@ desktop/build.sh          # → build-desktop/optc-legacy (SDL2, or null headles
 web/build.sh              # → build-web/optc-legacy.html + .js + .wasm
 python3 -m http.server -d build-web 8080
 ```
+
+Every push to `main` also auto-publishes the web build to GitHub Pages:
+**<https://ali-f-harandi.github.io/OPTC-Legacy/>**
 
 ### Android (custom APK, own signature)
 
@@ -220,7 +229,13 @@ Reproduce the full unpack with `tools/extract_apkm.sh` and
 ## Roadmap
 
 1. **M0 — skeleton** ✅ engine registry + 3 build targets + own signing key
-2. **M1 — loader defeat**: reverse the `7ffe` key schedule, decrypt `data1.dat`
+2. **M1 — loader defeat** ✅ **core done**: bootstrap chain reversed, cipher
+   (dword add+XOR stream) recovered, self-keyed header cracked, stage-2
+   protector module (153,968 B of valid ARM64) decrypts cleanly —
+   see [`notes/7ffe-loader.md`](notes/7ffe-loader.md) and
+   `tools/unpack_7ffe.py`
+   - **M1b — open**: stage-2 holds the `data1.dat` key/algorithm; decompile
+     the decrypted module to finish the asset unlock
 3. **M2 — asset pipeline**: parse the 39.9 MB engine blob + `.DAT/.idx/.vb`
    chunk format (already mapped: `notes/asset-format.md`)
 4. **M3 — JNI table**: walk `JNI_OnLoad`/`RegisterNatives` → full Java-facing

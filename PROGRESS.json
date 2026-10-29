@@ -26,9 +26,9 @@
     {
       "id": "loader-7ffe",
       "name": "Anti-tamper loader — lib__7ffe__.so",
-      "done": 75,
+      "done": 88,
       "weight": 4,
-      "note": "277/277 functions pseudocoded; data1.dat key schedule still unknown"
+      "note": "M1 DONE: bootstrap chain + cipher reversed; stage-2 (150 KB ARM64) decrypts clean; data1.dat key lives in stage-2 (M1b)"
     },
     {
       "id": "signer",
@@ -61,9 +61,9 @@
     {
       "id": "asset-formats",
       "name": "Asset formats & pipelines",
-      "done": 18,
+      "done": 24,
       "weight": 12,
-      "note": ".idx chunk format reversed; 39.9 MB engine blob + data1.dat extracted, encrypted"
+      "note": ".idx chunk format + 7ffe container format reversed (unpack_7ffe.py); 39.9 MB engine blob + data1.dat still encrypted"
     },
     {
       "id": "build-android",
@@ -89,9 +89,9 @@
     {
       "id": "tooling",
       "name": "Tooling & CI",
-      "done": 45,
+      "done": 58,
       "weight": 6,
-      "note": "blob extractor, progress tracker, 3-target CI matrix"
+      "note": "unpacker + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy"
     },
     {
       "id": "docs",
@@ -112,8 +112,8 @@
     {
       "label": "Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)",
       "total": 56,
-      "done": 42,
-      "in_progress": 6,
+      "done": 49,
+      "in_progress": 3,
       "per_row": 28
     },
     {
