@@ -1,0 +1,96 @@
+{
+ "subject": "lib__7ffe__.so decrypted stage-2 payload (7ffe-payload.dec)",
+ "sha256": "e7ddfa07743b77716cb027a7a6297e333ad18e65c3cfc0e5316a521fa003ea67",
+ "size": 153968,
+ "entry": "0x5d4",
+ "decompilation": {
+  "auto_functions": 269,
+  "forced_functions": 67,
+  "provider": "Ghidra 12.1.4 (rea decompile-all, raw-binary arm64)",
+  "notes": "Ghidra's default pass misses the crypto block 0x10500-0x11d10 (non-contiguous, reached only via mid-function branches); recovered by forced function creation"
+ },
+ "memory_map": [
+  {"range": "0x00000-0x10500", "role": "ARM64 code"},
+  {"range": "0x10500-0x11d10", "role": "second inlined AES round function (hidden from default analysis)"},
+  {"range": "0x11d10-0x13110", "role": "AES tables Td0-Td3 + replicated inverse S-box"},
+  {"range": "0x13110-0x13150", "role": "AES Rcon"},
+  {"range": "0x13150-0x16000", "role": "custom relocation table + eh_frame-like data"},
+  {"range": "0x256b0-0x25738", "role": "import names: liblog.so libstdc++.so libm.so libc.so libz.so libdl.so"},
+  {"range": "0x257e0-0x257ec", "role": "config: 0x55, 0x26, 0x14B4 (stream key/seed), 0"},
+  {"range": "0x257f0-0x258e4", "role": "shipped AES-256 context"},
+  {"range": "0x258f0-0x258f4", "role": "u32 0xF4 = sizeof(ctx)"}
+ ],
+ "crypto": {
+  "aes": {
+   "implementation": "T-table equivalent inverse cipher, big-endian block I/O",
+   "block_decrypt": ["0x104f8", "0xff24"],
+   "cbc_driver": ["0x10204", "0xfc30"],
+   "iv": "zero (16 bytes)",
+   "keysize_check": "0x10468 (accepts 0x80/0xc0/0x100 bits)",
+   "rounds_from_keysize": "0x104a0 (10/12/14)",
+   "tables": {
+    "Td0": {"offset": "0x11d10", "standard": true, "differing_entries": 0},
+    "Td1": {"offset": "0x12110", "standard": true, "differing_entries": 0},
+    "Td2": {"offset": "0x12510", "standard": true, "differing_entries": 0},
+    "Td3": {"offset": "0x12910", "standard": true, "differing_entries": 0},
+    "ISbox_replicated": {"offset": "0x12d10", "standard": true, "differing_entries": 0},
+    "Rcon": {"offset": "0x13110"}
+   },
+   "shipped_ctx": {
+    "offset": "0x257f0",
+    "keysize_bits": 256,
+    "rounds": 14,
+    "round_keys_offset": "0x257f4",
+    "round_keys_bytes": 240,
+    "storage": "equivalent inverse-cipher schedule in DECRYPTION (reversed) order",
+    "layout": "stored[0:4]=w[56..59]; stored[4:56]=InvMixColumns(w[52..4]); stored[56:60]=w[0..3]"
+   },
+   "master_key_hex_be": "0cff25e770136105e1a82d418ebfd5c6c9eee3060d59424e3fdda39e348e20b9",
+   "schedule_reexpansion_match": "60/60",
+   "fips197_aes256_test": "PASS"
+  },
+  "stream_cipher": {
+   "function": "0xeb34",
+   "key_source": "[0x257e8] = 0x14B4",
+   "algorithm": "evolving per-dword: s1=(((s1+0xE9FA57E4)*s1)+x+0x8E495673)<<(i&7); s2=(((s2+0x4F8B1BCA)*s2)+x+0x72F6FCBE)>>((i*i)&0xF); x=s1^s2; d=(((d+(i&13)*0xB43B9BAF)^(i&3)*0xAF57F7FB)-x)^x",
+   "verification": "instruction-by-instruction match against ARM64 assembly"
+  },
+  "gf232_deobfuscator": {
+   "function": "0x181c",
+   "algorithm": "carry-less multiply, reduction polynomial 0x579357EB",
+   "header_wrapper": "0x176c = clmul32(0x09451DD2, v)",
+   "keytable_wrapper": "0x1d40 (const 0x36DCAC9C)"
+  },
+  "lz": {
+   "decompressor": "0xf9f4",
+   "token_source": "0xf878 (deobfuscated u32 tokens)",
+   "opcodes": "token&0x300: 0x000 literal, 0x100 length accumulation, 0x200 RLE 1/2/4-byte, 0x300 windowed copy",
+   "dispatch": "0xf444 (memcpy when src_size==dst_size, else LZ)"
+  }
+ },
+ "container_format": {
+  "parser": "0xdd70",
+  "pipeline_fragment": ["0xdacc", "0xdafc"],
+  "seed": "((x*x)>>17) ^ ((x*x)<<11), x=[0x257e8]=0x14B4",
+  "header_formulas": {
+   "d0_total_size": "seed*0xF87B337C + (0xA21DFB3A << (seed&7)) + clmul(0x09451DD2, w0)",
+   "d1_count_flags": "((0x416E2AF2 >> (seed&0xD)) + seed + 0xBD19C63C) ^ clmul(0x09451DD2, w1)",
+   "d2_keytable_size": "((0x643A3A3B << (seed&0xB)) - (seed ^ 0x3B2BF538)) + clmul(0x09451DD2, w2)"
+  },
+  "sanity": "0 < count <= 0x100; 0 < key_table_size <= 0x1B00",
+  "data1_dat": {
+   "size": 181700,
+   "structure": "4 + 181696 (tail exactly 16-byte aligned = 11356 AES blocks)",
+   "status": "chain stages individually verified; exact buffer hand-off into the pipeline fragment remains to be traced (0x165c source reader / 4-byte head)"
+  }
+ },
+ "anti_analysis": [
+  "no dynamic-linker imports: liblog/libstdc++/libm/libc/libz/libdl resolved by hand-rolled ELF scanner 0x29a0 + private relocation processor 0x5024",
+  "raw SVC syscall wrapper 0x10108 (openat 0x10198 etc.)",
+  "ptrace(0x109=PR_SET_PTRACER-style self-attach) in entry",
+  "crypto code region hidden from recursive-descent analysis via mid-function branches",
+  "shipped precomputed key schedule avoids a runtime key expansion to inspect"
+ ],
+ "tool": "tools/stage2_crypto.py",
+ "notes": "notes/stage2-crypto.md"
+}

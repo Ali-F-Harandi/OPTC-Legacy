@@ -123,10 +123,13 @@ Decrypting with key `0x56F3` yields **valid ARM64 code**:
 ## 6. What stage-2 is
 
 The decrypted 150 KB module is the actual protector core that runs RWX
-in-process: presumably the piece that later mounts `data1.dat`, hooks
-`dlopen`/linker callbacks (hence the `dl*` imports), and mediates
-`libgame.so` startup. Reversing *it* is the next milestone (M1b):
-decompile `7ffe-payload.dec` (regenerate with the unpacker) in Ghidra.
+in-process: it mounts `data1.dat`, mediates `libgame.so` startup, and
+carries its own crypto stack. **M1b status: the crypto core is fully
+reversed** — AES-256 (standard T-tables, master key recovered from the
+shipped decrypt-order schedule), an evolving stream cipher, a GF(2^32)
+deobfuscator, and an LZ77 layer. See **`notes/stage2-crypto.md`** and
+`tools/stage2_crypto.py`. Pseudocode lives in
+`decomp/native-loader-7ffe-stage2/` (269 auto + 67 forced functions).
 
 ## 7. `data1.dat` — ruled out for this cipher
 

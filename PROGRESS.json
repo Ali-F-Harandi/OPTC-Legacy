@@ -1,127 +1,134 @@
 {
-  "project": "OPTC Legacy",
-  "target": "com.namcobandaigames.spmoja010E 16.2.1 (versionCode 1621)",
-  "modules": [
-    {
-      "id": "acquisition",
-      "name": "Artifact acquisition (tgkit/MTProto)",
-      "done": 100,
-      "weight": 2,
-      "note": "134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt"
-    },
-    {
-      "id": "packaging",
-      "name": "Packaging & signature analysis",
-      "done": 100,
-      "weight": 2,
-      "note": "34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic"
-    },
-    {
-      "id": "platform-shell",
-      "name": "Platform shell — Bisque Java layer",
-      "done": 7,
-      "weight": 8,
-      "note": "9 of 187 jp.co.drecom.bisque classes deep-documented (JADX)"
-    },
-    {
-      "id": "loader-7ffe",
-      "name": "Anti-tamper loader — lib__7ffe__.so",
-      "done": 88,
-      "weight": 4,
-      "note": "M1 DONE: bootstrap chain + cipher reversed; stage-2 (150 KB ARM64) decrypts clean; data1.dat key lives in stage-2 (M1b)"
-    },
-    {
-      "id": "signer",
-      "name": "API signer — libsigner.so",
-      "done": 85,
-      "weight": 3,
-      "note": "519 functions pseudocoded; request-signing scheme reconstructed"
-    },
-    {
-      "id": "engine-core",
-      "name": "Engine core — libgame.so",
-      "done": 4,
-      "weight": 20,
-      "note": "section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending"
-    },
-    {
-      "id": "engine-graphics",
-      "name": "Renderer (OpenGL ES 2)",
-      "done": 2,
-      "weight": 10,
-      "note": "GLES2 confirmed via shell; runtime API table not yet walked"
-    },
-    {
-      "id": "engine-audio",
-      "name": "Audio (OpenSLES)",
-      "done": 2,
-      "weight": 6,
-      "note": "backend confirmed; mixer/voice graph pending"
-    },
-    {
-      "id": "asset-formats",
-      "name": "Asset formats & pipelines",
-      "done": 24,
-      "weight": 12,
-      "note": ".idx chunk format + 7ffe container format reversed (unpack_7ffe.py); 39.9 MB engine blob + data1.dat still encrypted"
-    },
-    {
-      "id": "build-android",
-      "name": "Android custom build",
-      "done": 25,
-      "weight": 8,
-      "note": "Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks)"
-    },
-    {
-      "id": "build-web",
-      "name": "Web build (Emscripten/WASM)",
-      "done": 15,
-      "weight": 5,
-      "note": "single CMake tree + Emscripten preset & shell ready"
-    },
-    {
-      "id": "build-desktop",
-      "name": "Desktop build (SDL2)",
-      "done": 30,
-      "weight": 5,
-      "note": "null/SDL2 backends compile clean on Linux — smoke-tested"
-    },
-    {
-      "id": "tooling",
-      "name": "Tooling & CI",
-      "done": 58,
-      "weight": 6,
-      "note": "unpacker + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy"
-    },
-    {
-      "id": "docs",
-      "name": "Documentation",
-      "done": 40,
-      "weight": 4,
-      "note": "architecture map + engine deep-dive notes published"
-    }
-  ],
-  "unit_grids": [
-    {
-      "label": "Platform shell — jp.co.drecom.bisque (1 cell = 1 class)",
-      "total": 187,
-      "done": 9,
-      "in_progress": 4,
-      "per_row": 25
-    },
-    {
-      "label": "Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)",
-      "total": 56,
-      "done": 49,
-      "in_progress": 3,
-      "per_row": 28
-    },
-    {
-      "label": "API signer — libsigner.so (1 cell = 20 functions, 519 total)",
-      "total": 26,
-      "done": 22,
-      "in_progress": 2,
-      "per_row": 26
-    }
-  ]
+ "project": "OPTC Legacy",
+ "target": "com.namcobandaigames.spmoja010E 16.2.1 (versionCode 1621)",
+ "modules": [
+  {
+   "id": "acquisition",
+   "name": "Artifact acquisition (tgkit/MTProto)",
+   "done": 100,
+   "weight": 2,
+   "note": "134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt"
+  },
+  {
+   "id": "packaging",
+   "name": "Packaging & signature analysis",
+   "done": 100,
+   "weight": 2,
+   "note": "34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic"
+  },
+  {
+   "id": "platform-shell",
+   "name": "Platform shell — Bisque Java layer",
+   "done": 7,
+   "weight": 8,
+   "note": "9 of 187 jp.co.drecom.bisque classes deep-documented (JADX)"
+  },
+  {
+   "id": "loader-7ffe",
+   "name": "Anti-tamper loader — lib__7ffe__.so",
+   "done": 93,
+   "weight": 4,
+   "note": "M1b core DONE: stage-2 crypto architecture fully reversed — AES-256 T-tables byte-exact standard, shipped decrypt-order schedule inverted to master key (60/60 re-expansion, FIPS-197 PASS), stream cipher + GF(2^32) deobfuscator + LZ77 layer reimplemented; data1.dat buffer hand-off tracing remains"
+  },
+  {
+   "id": "signer",
+   "name": "API signer — libsigner.so",
+   "done": 85,
+   "weight": 3,
+   "note": "519 functions pseudocoded; request-signing scheme reconstructed"
+  },
+  {
+   "id": "engine-core",
+   "name": "Engine core — libgame.so",
+   "done": 4,
+   "weight": 20,
+   "note": "section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending"
+  },
+  {
+   "id": "engine-graphics",
+   "name": "Renderer (OpenGL ES 2)",
+   "done": 2,
+   "weight": 10,
+   "note": "GLES2 confirmed via shell; runtime API table not yet walked"
+  },
+  {
+   "id": "engine-audio",
+   "name": "Audio (OpenSLES)",
+   "done": 2,
+   "weight": 6,
+   "note": "backend confirmed; mixer/voice graph pending"
+  },
+  {
+   "id": "asset-formats",
+   "name": "Asset formats & pipelines",
+   "done": 24,
+   "weight": 12,
+   "note": ".idx chunk format + 7ffe container format reversed (unpack_7ffe.py); 39.9 MB engine blob + data1.dat still encrypted"
+  },
+  {
+   "id": "build-android",
+   "name": "Android custom build",
+   "done": 25,
+   "weight": 8,
+   "note": "Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks)"
+  },
+  {
+   "id": "build-web",
+   "name": "Web build (Emscripten/WASM)",
+   "done": 15,
+   "weight": 5,
+   "note": "single CMake tree + Emscripten preset & shell ready"
+  },
+  {
+   "id": "build-desktop",
+   "name": "Desktop build (SDL2)",
+   "done": 30,
+   "weight": 5,
+   "note": "null/SDL2 backends compile clean on Linux — smoke-tested"
+  },
+  {
+   "id": "tooling",
+   "name": "Tooling & CI",
+   "done": 58,
+   "weight": 6,
+   "note": "unpacker + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy"
+  },
+  {
+   "id": "docs",
+   "name": "Documentation",
+   "done": 40,
+   "weight": 4,
+   "note": "architecture map + engine deep-dive notes published"
+  }
+ ],
+ "unit_grids": [
+  {
+   "label": "Platform shell — jp.co.drecom.bisque (1 cell = 1 class)",
+   "total": 187,
+   "done": 9,
+   "in_progress": 4,
+   "per_row": 25
+  },
+  {
+   "label": "Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)",
+   "total": 56,
+   "done": 49,
+   "in_progress": 3,
+   "per_row": 28
+  },
+  {
+   "label": "API signer — libsigner.so (1 cell = 20 functions, 519 total)",
+   "total": 26,
+   "done": 22,
+   "in_progress": 2,
+   "per_row": 26
+  },
+  {
+   "label": "Stage-2 protector (1 cell = 10 functions, 269 total)",
+   "total": 27,
+   "done": 5,
+   "in_progress": 2,
+   "per_row": 27
+  }
+ ]
 }

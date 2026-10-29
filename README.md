@@ -15,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 25.2% decompiled & rebuilt**
+**Overall — 25.4% decompiled & rebuilt**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  25.2%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  25.4%
 ```
 
 | Module | Progress | Status |
@@ -26,7 +26,7 @@
 | Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
 | Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
-| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 88% | M1 DONE: bootstrap chain + cipher reversed; stage-2 (150 KB ARM64) decrypts clean; data1.dat key lives in stage-2 (M1b) |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜` 93% | M1b core DONE: stage-2 crypto architecture fully reversed — AES-256 T-tables byte-exact standard, shipped decrypt-order schedule inverted to master key (60/60 re-expansion, FIPS-197 PASS), stream cipher + GF(2^32) deobfuscator + LZ77 layer reimplemented; data1.dat buffer hand-off tracing remains |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
 | Engine core — libgame.so | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 4% | section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
@@ -62,6 +62,12 @@
 
 ```text
 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨⬜⬜
+```
+
+**Stage-2 protector (1 cell = 10 functions, 269 total)** — 5/27 (18.5%)
+
+```text
+🟩🟩🟩🟩🟩🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 ```
 
 <sub>Regenerate with `python3 tools/progress.py --write`. Percentages are measured against concrete units (classes, functions, formats, build targets) — never vibes.</sub>
