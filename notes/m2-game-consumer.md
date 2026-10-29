@@ -159,3 +159,43 @@ python3 tools/stage2_crypto.py <libgame.so> --game [--out dir]
 Module images / patches / the 38.5 MB raw blob are reproducible with the
 same pipeline as M1b (`dd70_parse`/`dd70_extract` with
 `key=0x2B47`, game stage-2 tables and schedule).
+
+## 9. M2b addendum — e3 formulas are folded stage-2 math; data1.dat key-matrix negative
+
+Full disassembly of e3's container stack (dd70 `+0x2d34`, head `+0x2870`,
+entry `+0x297c`, stream `+0x33ac`, chunk pipeline `+0x2b10`) proves every
+"differing" constant is **compiler constant-folding**, e.g.
+`0x4178CB33 = 0xEBE81DBA + 0x5E727D74 + 0xF71E3005 (mod 2^32)`,
+`0xF119421B = 5×0xEBE81DBA + …`, `0x5590AD79 = 0x5E727D74 + 0xF71E3005`,
+dd70 mulB `0xF1CB5B81 − 0x23B32203 = 0xCE18397E`, pair m2
+`0xB31F451C − 0x822FE82D = 0x30EF5CEF`, entry addend
+`0x79934CF6 + i×0xE64D33D8 = (4i+1)×0x79934CF6`, entry subtrahend
+`0x96F60B71 + 0x06A55BCC = 0x9D9B673D`. Consequence: M1b's exhaustive
+seed sweeps already covered e3's formula space.
+
+The genuinely new variables — the key set — were then tested exhaustively:
+
+* e3 stream keys `[0x1a2f8]`: game `0x461f`, protector `0x6c74`
+  (read-only at runtime);
+* e3 private AES-256 schedules (both copies, 60/60 re-expansion);
+* game stage-2 key (`6384b59a…`, x=`0x2b47`), protector stage-2 key;
+* views {body, full}, orders {stream→CBC, CBC→stream}, no-stream/no-CBC
+  variants, head-derived keys;
+* oracles: scatter-header sanity (calibrated PASS on real M1b chunks:
+  `n=1, eoff=0x10, doff=0x20`), dd70 re-parse, printable/entropy.
+
+**Result: 0 hits in every combination.** e3's chunk pipeline semantics are
+confirmed correct (CBC = e1+0x820c via registry descriptor `{0x96, 0x820c}`,
+zero IV, `size>>4` floor — identical to stage-2), so data1.dat simply does
+not use any protector-side key.
+
+Consumer hunt: `data1`/`data2` are **unreferenced pool strings** in
+classes4.dex (no const-string users); `assets/` appears only in
+`Cocos2dxHelper.init`; all decoded native strings (stage-2 ×53, e1, e3 full
+range, libgame.so stub) contain no `data1`/`7ffe` path; no device-`0xf3`
+lookups or descriptors exist in e1/e3/stage-2. **The consumer lives inside
+the still-encrypted game code** (device 0x8f / the 38.5 MB `0xf3` blob),
+which shares the `[4B][16-aligned]` scheme family with data1.dat and the
+protector's e2 blob.
+
+Details: `evidence/m2b-data1-e3-retest.json`.

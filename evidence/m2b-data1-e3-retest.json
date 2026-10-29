@@ -1,0 +1,79 @@
+{
+ "evidence_id": "ev_m2b_data1_e3_retest",
+ "milestone": "M2b",
+ "subject": "data1.dat vs e3's private crypto — formulas proven equivalent to stage-2, key-matrix retest negative",
+ "e3_formula_analysis": {
+  "method": "full disassembly of e3+0x2644 (wrapper), +0x2d34 (dd70 extractor), +0x2870 (head decoder), +0x297c (entry reader), +0x2a68 (clmul), +0x33ac (stream cipher), +0x2b10 (chunk pipeline)",
+  "verdict": "every 'differing' e3 constant is compiler CONSTANT-FOLDING of the identical stage-2 math",
+  "proofs": {
+   "head_w0_xor": "e3 0x4178CB33 == 1*0xEBE81DBA + 0x5E727D74 + 0xF71E3005 (mod 2^32)",
+   "head_w1_xor": "e3 0xF119421B == 5*0xEBE81DBA + 0x5E727D74 + 0xF71E3005 (mod 2^32)",
+   "head_seed_add": "e3 0x5590AD79 == 0x5E727D74 + 0xF71E3005 (mod 2^32)",
+   "dd70_mulB": "e3 msub encoding (mulA - seed*0x23B32203) == (seed+0xCE18397E)*seed: 0xF1CB5B81-0x23B32203 == 0xCE18397E",
+   "pair_m2": "e3 msub encoding == (seed+0x30EF5CEF)*seed: 0xB31F451C-0x822FE82D == 0x30EF5CEF",
+   "entry_addend": "e3 (0x79934CF6 + word_idx*0xE64D33D8) == (4*word_idx+1)*0x79934CF6 mod 2^32",
+   "entry_subtrahend": "e3 ((seed+0x96F60B71)*seed + seed*0x06A55BCC) == (seed+0x9D9B673D)*seed: 0x96F60B71+0x06A55BCC == 0x9D9B673D",
+   "dd70_header_formulas": "byte-identical (seed*0xF87B337C + (0xA21DFB3A << (seed&7)) + clmul(w0) etc.)",
+   "stream_cipher": "byte-identical constants (0x07B48238/0xE34EAC63/0xE9FA57E4/0x8E495673/0x4F8B1BCA/0x72F6FCBE/0xB43B9BAF/0xAF57F7FB)"
+  },
+  "consequence": "M1b's exhaustive sweeps (dd70 all-2^32 seeds; outer container count 1..0x100) already covered e3's formula space — the only untested variables were the KEY SET"
+ },
+ "e3_key_material": {
+  "stream_key_global": "[0x1a2f8] — read-only at runtime (no writes found in e3)",
+  "protector_e3": {"stream_x": "0x6c74", "dd70_seed": "0x90a496f9", "aes256_master_be": "641f783d3163b6cbd7ddd65e716fb7a3b3b46c7748b2bab88252c118140a76", "schedule_reexpansion": "60/60"},
+  "game_e3": {"stream_x": "0x461f", "dd70_seed": "0xa7be019a", "aes256_master_be": "851356332f2f8a5ead4baa14c8908068db7a949d8a6ec82d074b83bc8e430f4a", "schedule_reexpansion": "60/60"},
+  "e3_trailer_layout": "+0x1a1e0: {0x8f, 0x164c, 1, 0xa} config; +0x1a1f0: 0xf4 ctx size; +0x1a1f8: {keysize=0x100, rounds=14}; +0x1a1fc: 240B reversed schedule; +0x1a2dc..: master words (bswapped) at tail; +0x1a300: lock/TLS ptr; +0x1a310: mode flag byte; +0x1a314: runtime seed (written by head decoder)"
+ },
+ "e3_chunk_pipeline": {
+  "function": "e3+0x2b10",
+  "steps": [
+   "1. stream_decrypt(buf, x=[0x1a2f8]) — e3+0x33ac",
+   "2. if flag==0: AES-CBC(buf, ctx@0x1a1f8) — driver e3+0x42a8, resolved via registry descriptor 0x19ee0 -> {id=0x96, off=0x820c} = e1's CBC",
+   "3. scatter/LZ: e3+0x3468 — plaintext = {u32 base, u32 count, u32 entries_off, u32 data_off} + count x 16B {dst_off, dst_size, src_size} + data"
+  ],
+  "e1_cbc_driver": "e1+0x820c: zero IV (stp xzr,xzr x2), blocks = size>>4 FLOOR, in-place, AES block fn e1+0x7dc8, standard Td tables at e1+0x12dd0 — semantics identical to stage-2 0xfc30/0x10204"
+ },
+ "data1_retest_matrix": {
+  "views": ["body (skip 4B head)", "full file"],
+  "stream_keys": ["0x461f (game e3)", "0x6c74 (prot e3)", "0x2b47 (game stage-2)", "0x14b4 (prot stage-2)", "head 0x3ecbf1da", "seed(head^2)", "no-stream"],
+  "aes_keys": ["game e3 private", "protector e3 private", "game stage-2 shipped", "protector stage-2 shipped", "none"],
+  "orders": ["stream->cbc", "cbc->stream"],
+  "oracles": [
+   "scatter header sanity (calibrated on real M1b chunks: base=0x1fd0 n=1 eoff=0x10 doff=0x20 PASS)",
+   "dd70 header re-parse with seeds {f(x), x, f(head), head}",
+   "printable/low-entropy scan"
+  ],
+  "result": "0 hits in every combination",
+  "head16_samples": {
+   "body+x0x461f+aes_game_e3": "0d6259c9524eddcbf82ef2043fba0c4f5f6262730b37fde0",
+   "body+x0x6c74+aes_prot_e3": "c3cfc4d09bcf76edada9323c79234b2e9692015b0eff0dd9"
+  }
+ },
+ "consumer_hunt": {
+  "java_side": {
+   "classes4_dex_strings": "'data1' [23589], 'data2' [23590] — ZERO const-string references (unreferenced pool entries); 'assets/' only in Cocos2dxHelper.init; 'file:///android_asset/' only in BQWebView (engine code)",
+   "classes6_dex": "util001/framework/load.<clinit> const-string '__7ffe__' (the known loadLibrary)"
+  },
+  "native_strings": {
+   "stage2_dafc_15": "'/system/lib64', '/system/lib64/arm64', 'LD_LIBRARY_PATH', '/system/lib/libhoudini.so', '__bss_start', 'dladdr', '/apex/com.android.runtime/', 'dlopen', '__errno', '_data_start__', '__cxa_', '/proc/self/maps', '/proc/self/environ'",
+   "stage2_d528_38": "dlopen/dlerror/dlsym/dlclose/dladdr/dlvsym, __errno, _edata, _data_start__, __cxa_, /proc/, /maps, /proc/self/maps",
+   "e1_stack_strings": "'/system/lib64/arm64', '/system/lib/oudini.so', '!/lib/', 'signal', 'dlopen', '__errno', '__cxa_', '/proc/self/maps', '/proc/self/environ', 'x86'",
+   "e3_both_copies_full_range": "no path strings at all (both ror8-3 and rol8-5 families tried)",
+   "libgame_so_stub": "0 decodable buffers in .text [0x1a77380,0x1a80000)"
+  },
+  "device_0xf3_lookups": "none in e1/e3/stage-2 (no immediates, no {0xf3,off} descriptors in data regions) — the consumer of the [4B][16-aligned] blobs lives inside the still-encrypted game code (device 0x8f / the 38.5MB 0xf3 blob)",
+  "conclusion": "data1.dat's decryption is game-side code we cannot yet read; all protector-side key sets are now exhaustively excluded"
+ },
+ "sibling_assets": {
+  "RES.DAT.idx_40B": "{u32 0x64, u32 a, u32 b, u32 count=2} + count x 8B — visible structure, different family",
+  "FONT.DAT.idx_56B": "same shape, count=4",
+  "RES.DAT.vb_2739B": "[count][hex-text UUIDs] — plaintext",
+  "data1.dat_181700B": "the only encrypted asset"
+ },
+ "reproduce": "python3 evidence/m2_e3_data1_test.py",
+ "next_leads": [
+  "the game's 0xf3 blob (38.5MB, 16-aligned, no 4B head) and protector e2 (968836B, [4B][16-aligned]) share the target scheme with data1.dat",
+  "stage-2 config [0x257e4] (0x26 prot / 0x1d99a game) is stored to registry_obj+0xb0 by ENTRY — role unknown, possible runtime-container parameter",
+  "the e3 container processor (e3+0x2084) count parameter comes from the caller — game-side"
+ ]
+}
