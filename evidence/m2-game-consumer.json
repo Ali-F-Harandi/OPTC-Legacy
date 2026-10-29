@@ -1,0 +1,151 @@
+{
+ "evidence_id": "ev_m2_game_consumer",
+ "milestone": "M2",
+ "subject": "libgame.so consumer of the stage-2 protector protocol",
+ "artifact": {
+  "file": "split_config.arm64_v8a.apk!/lib/arm64-v8a/libgame.so",
+  "size_bytes": 109319040,
+  "sections_of_interest": {
+   ".text": {
+    "vaddr": "0x1a77380",
+    "size": "0x2493da4",
+    "real_content": "[0x1a77380, 0x1a80000) = ~35 KB stub; remainder zero-filled"
+   },
+   "LOUSER+0_shdr28": {
+    "file_off": "0x422ca10",
+    "size": "0x2613e50",
+    "note": "appended encrypted payload, outside all PT_LOADs"
+   }
+  },
+  "dynsym": "121242 entries, 121203 blanked by the protector (names+values zeroed); 35 imports + 39 exports remain",
+  "exports": "NO JNI_OnLoad, NO Java_*, NO ANativeActivity_* — the Java surface is mediated entirely by the protector/hidden loader"
+ },
+ "java_load_order": [
+  {
+   "class": "Lcom/namcobandaigames/spmoja010E/EntryApplication;",
+   "method": "attachBaseContext",
+   "loads": "System.loadLibrary(\"__7ffe__\") via util001/framework/load.<clinit> (protector first)"
+  },
+  {
+   "class": "Ljp/co/drecom/application/AppActivity;",
+   "method": "<clinit>",
+   "loads": "System.loadLibrary(\"game\") (libgame.so, later)"
+  }
+ ],
+ "game_stub": {
+  "init_array0": "0x1a77e34 — universal register-saving thunk (x0-x30) calling 0x1a7771c",
+  "bootstrap": "0x1a7771c — self-delta via 0x1a7739c, /proc/self/maps walk (0x1a78b30+0x1a799b0+0x1a78d70, obfuscated strings same family as e1: plain[i] = (~rol8(c,5) - (i&3)) & 0xFF)",
+  "syscall_wrapper": "0x1a7bee8 — raw svc #0 with syscall nr in x8 via multiplexer 0x1a7bf1c; commands used: 56 openat, 57 close, 62 lseek, 63 read, 215 munmap, 222 mmap, 226 mprotect (bypasses libc entirely)",
+  "payload_location": "own ELF walk (e_phoff 0x20/e_phnum 0x38, 56-byte phdrs): max PT_LOAD end = 0x422ca10; shdr walk finds sh_type 0x80000000 (LOUSER+0) = section 28",
+  "payload_header": "file 0x422cc4c (+0x23C prefix, same as stage-1), self-keyed 0x20-byte header, cipher = stage-1 family (v += (i+3)*key; v ^= (i+1)*0xBF20165D)",
+  "header_fields": {
+   "self_key": "0x3aa2",
+   "data_off": "0x20",
+   "size": "0x25970",
+   "key": "0x6f07",
+   "entry": "0x5d4",
+   "mprot_len": "0x15570"
+  },
+  "handoff": "mprotect(base, mprot_len, RWX) then blr entry(saved_x0, self_delta, base, size, adj_base, adj_size, x6, x7) — the same 8-arg convention as the protector's stage-2 entry"
+ },
+ "game_stage2": {
+  "size": 153968,
+  "diff_vs_protector_stage2": "245 bytes, all inside [0x257e4, 0x258e3] = config + AES-256 schedule",
+  "config_words": {
+   "0x257e0": "0x55",
+   "0x257e4": "0x1d99a (protector: 0x26)",
+   "0x257e8_stream_seed": "0x2b47 (protector: 0x14b4)",
+   "0x257ec": "0"
+  },
+  "aes256_master_key_be": "6384b59af089ddb817d7eed5086b3e0753267758ab81841ae97cb17a54d70d58",
+  "schedule_validation": "60/60 words reproduce the stored reversed schedule",
+  "fips197": "same Td0-Td3/InvSBox/Rcon tables, byte-identical to the protector's"
+ },
+ "game_container": {
+  "file_offset": "0x42525dc",
+  "runtime_seed": "0xe12bac93",
+  "entries": [
+   {
+    "id": "0x81",
+    "flags": "0x20000",
+    "src_size": "0x140d8",
+    "patch": "0x2b2",
+    "note": "e0 twin — 2 bytes differ vs protector copy (data @+0x13db0)"
+   },
+   {
+    "id": "0x96",
+    "flags": "0x0",
+    "src_size": "0x2a870",
+    "patch": "0xe10",
+    "note": "e1 twin — 6 bytes differ: +0x29ae8 (ptr const) and +0x2a1b0 (handshake cookie 0x9c11c027 vs 0x6c5efd24)"
+   },
+   {
+    "id": "0xf3",
+    "flags": "0x102",
+    "src_size": "0x25d3cc0 (38.5 MB)",
+    "note": "THE REAL GAME CODE — raw register-only blob, still encrypted (game-side scheme)",
+    "sha256": "3224b63411b94874a3b1613beeef271dd8c00949b5c03e2959b35cdc3d524935"
+   },
+   {
+    "id": "0xe3",
+    "flags": "0x0",
+    "src_size": "0x1a638",
+    "patch": "0x811",
+    "note": "e3 twin — 241 bytes differ, INCLUDING a private 240-byte AES-256 schedule at +0x1a1fc"
+   }
+  ],
+  "terminator_check": "entry[0].src_off = 0x178 = 8 + 4*0x5C — table exactly 4 entries"
+ },
+ "e3_private_crypto": {
+  "trailer_layout": "+0x1a1f0: 0xf4 (ctx size), +0x1a1f4: 0x000e0100 (256-bit, 14 rounds), +0x1a1fc: 240-byte reversed schedule",
+  "game_e3_master_key_be": "851356332f2f8a5ead4baa14c8908068db7a949d8a6ec82d074b83bc8e430f4a",
+  "protector_e3_master_key_be": "641f783d3163b6cbd7ddd65e716fb7a3b3b46c7748b2bab88252c118140a76",
+  "schedule_validation": "60/60 words on both",
+  "game_e3_master_key_words_le": [
+   "33561385",
+   "2f2f8a5e",
+   "ad4baa14",
+   "c8908068",
+   "db7a949d",
+   "8a6ec82d",
+   "074b83bc",
+   "8e430f4a"
+  ],
+  "protector_e3_master_key_words_le": [
+   "3d781f64",
+   "cb637a31",
+   "d782ddd6",
+   "5e716fb7",
+   "a3b3b46c",
+   "7748b2ba",
+   "b88252c1",
+   "18140a76"
+  ],
+  "head_decoder_constants_e3": [
+   "0x9D323CD7 (shared mul)",
+   "0xCBF0C1D8 (shared initial state)",
+   "0x4178CB33",
+   "0xF119421B",
+   "0x5590AD79"
+  ],
+  "note": "e3's container formulas DIFFER from the stage-2 dd70 constants — data1.dat must be retried against e3's formula set (M1b's exhaustive seed sweep used stage-2 formulas only)"
+ },
+ "device_registry_consumers": {
+  "e1_dispatchers": "52 lazy thunks in [0xd0b0, 0xe668] — each caches fn ptr, resolves via e1+0xe694 lookup with a static {u32 id; u32 offset} descriptor, calls under lock (0x11fc4/0xe4c0/0xe528)",
+  "e1_descriptor_table": "0x2a008..0x2a1a8: 49 descriptors -> device 0x8f (offsets 0x15a4..0x51fc), 2 -> device 0x81, 1 -> device 0x1 off 5",
+  "e3_dispatchers": "16 lookups — 9 -> device 0x96 (e1) at 0x29f4..0x820c, 7 -> device 0x8f",
+  "unregistered_devices": [
+   "0x8f (game API blob, ~52 functions)",
+   "0xb0 (game base: dispatcher at +0xa54, trampoline array slot at +0x12008)",
+   "0xb2 (hook-record table {count, hdr_off, records 0xc+4n bytes})",
+   "0x1"
+  ],
+  "trampoline_builder": "e1+0x836c (fetch 0xb0/0xb2, tail-call 0x88fc): builds N register-preserving lazy-binding thunks from a template at e1+0x8c18 (saves x0-x30 except x9, calls dispatcher(&{id, prng_off}), mov x30, x9; ret) — per-record offsets come from a seed-PRNG ((x^2>>17)+(x^2<<11) family), mprotect R+X, plants the array pointer at 0xb0_base+0x12008",
+  "e3_container_processor": "e3+0x2084 — full copy of the stage-2 orchestrator (head decode 0x2870, entry read 0x297c, dd70 extract 0x2644, register 0x5b84, fnptr2/init calls) — externally callable, no internal callers: THE second-level loader the game uses for runtime containers",
+  "cross_system_note": "both stage-2 instances are 99.84% identical code — the registry protocol is symmetric; the game's e1/e3 twins bind to the game-side registry, the protector's to the protector-side one; the 0xb0 handshake cookie (e1+0x2a1b0) differs per side, identifying the channel"
+ },
+ "reproduce": {
+  "game_stage2": "python3 tools/stage2_crypto.py <libgame.so> --game [--out dir]",
+  "note": "outputs the decrypted game stage-2, its master key, stream seed, and the container entry table"
+ }
+}

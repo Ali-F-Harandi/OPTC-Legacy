@@ -267,6 +267,18 @@ def parse_container_header(d, seed):
 
 CONTAINER_COUNT = 0xE2         # hardcoded in FUN_000004a0 (seed ingredient)
 CONTAINER_OFF = 0x7585C + 0x20 + 0x25970    # = 0x9B1EC, right after the stage-2 blob
+GAME_SEC_OFF = 0x422ca10                    # libgame.so LOUSER+0 section (shdr[28])
+GAME_PREFIX = 0x23C                         # header offset inside the section
+
+def dec_addxor(data, key):
+    """Stage-1 cipher FUN_00101520 (decrypt direction): v += (i+3)*key; v ^= (i+1)*0xBF20165D."""
+    d = bytearray(data)
+    for i in range(len(d) // 4):
+        v = struct.unpack_from("<I", d, i * 4)[0]
+        v = (v + (i + 3) * key) & M32
+        v ^= ((i + 1) * 0xBF20165D) & M32
+        struct.pack_into("<I", d, i * 4, v)
+    return bytes(d)
 
 def container_acc(count=CONTAINER_COUNT):
     """FUN_000013f0 phase 1 — accumulator from the hardcoded count."""
@@ -718,6 +730,53 @@ def main():
                   f"(file {blob_lo:#x})")
         print("[!] blobs are high-entropy (7.95 b/B) — stream/AES pipeline is the")
         print("    next M1b item.")
+        return
+
+
+    # M2: libgame.so payload mode — decrypt the game-side stage-2 + container
+    if "--game" in sys.argv:
+        so = open(blob_path, "rb").read()
+        out_dir = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else None
+        hdr_off = GAME_SEC_OFF + GAME_PREFIX
+        key0 = struct.unpack_from("<I", so, hdr_off)[0]
+        hdr = bytearray(dec_addxor(so[hdr_off:hdr_off + 0x20], key0))
+        struct.pack_into("<I", hdr, 0, key0)
+        data_off, size, key, entry = (struct.unpack_from("<I", hdr, 8)[0],
+                                      struct.unpack_from("<I", hdr, 0xc)[0],
+                                      struct.unpack_from("<I", hdr, 0x10)[0],
+                                      struct.unpack_from("<I", hdr, 0x14)[0])
+        print(f"[*] libgame.so LOUSER+0 @ {GAME_SEC_OFF:#x}, header @ +{GAME_PREFIX:#x}")
+        print(f"    data_off={data_off:#x} size={size:#x} key={key:#x} entry=+{entry:#x}")
+        body = so[hdr_off + data_off: hdr_off + data_off + size]
+        blob2 = dec_addxor(body, key)
+        mkey, match = recover_master_key(blob2)
+        gkey_hex = struct.pack(">8I", *mkey).hex()
+        print(f"[*] game stage-2: {len(blob2)} bytes, schedule match {match}/60")
+        if match == 60:
+            print(f"[+] GAME AES-256 MASTER KEY: {gkey_hex}")
+        print(f"[*] game stream seed [0x257e8] = {struct.unpack_from('<I', blob2, 0x257e8)[0]:#x}")
+        if out_dir:
+            import os
+            os.makedirs(out_dir, exist_ok=True)
+            open(f"{out_dir}/game-stage2.dec", "wb").write(blob2)
+        # container after the game stage-2
+        old_stream = STREAM_KEY
+        sc_stream = struct.unpack_from("<I", blob2, 0x257e8)[0]
+        globals()["STREAM_KEY"] = sc_stream
+        try:
+            cont = so[hdr_off + data_off + size:]
+            head, seed = deob_container_head(cont[:8])
+            print(f"[*] game container @ file {hdr_off + data_off + size:#x} "
+                  f"({len(cont):#x} bytes), seed {seed:#x}")
+            src = cont[8:]
+            for i in range(4):
+                e = read_entry_block(src, i, seed)
+                f = struct.unpack("<23I", e)
+                print(f"    id={f[0]:#04x} flags={f[1]:#x} "
+                      f"src=[{f[2]:#x}..+{f[3]:#x}] dst=[{f[4]:#x}..+{f[5]:#x}] "
+                      f"init_fn=+{f[7]:#x} fnptr2=+{f[8]:#x}")
+        finally:
+            globals()["STREAM_KEY"] = old_stream
         return
 
     # full module-blob decryption (input = the .so; --payload = stage-2 image)

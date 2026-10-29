@@ -26,9 +26,9 @@
   {
    "id": "loader-7ffe",
    "name": "Anti-tamper loader — lib__7ffe__.so",
-   "done": 98,
+   "done": 99,
    "weight": 4,
-   "note": "ALL 4 module blobs decrypted+patch-merged (0x11b4/0x3188 chain). data1.dat: exhaustively ruled out for the loader crypto - dd70 with ANY 32-bit seed (vectorized sweep + tiling oracle), outer format, stage-1 self-keyed, stream/CBC orders, AES with shipped key, zlib - all fail. e2 blob (969KB, device 0xf3) is its structural twin ([4B][16-aligned], ent 8.0): shared GAME-SIDE scheme in libgame.so. Device registry protocol reversed (e1+0xe678/e688/e694, {id,ptr,size}x0x100) = the game's entry point into the protector. Seed global [0x257e8] never written - stays 0x14B4. M2: libgame.so consumer + key derivation"
+   "note": "ALL 4 module blobs decrypted+patch-merged (0x11b4/0x3188 chain). M2 DONE: libgame.so consumer located+decrypted - 35KB stub (init_array[0] thunk, raw-svc loader) + 38.5MB LOUSER+0 payload = a TWIN stage-2 module system (99.84% identical; own AES-256 key 6384b59a...dd754-words, stream seed 0x2B47, container seed 0xE12BAC93, 4 entries, e0/e1/e3 twins + 38.5MB register-only game blob id 0xf3). e3 carries a PRIVATE AES-256 schedule (+0x1a1fc) + DIFFERENT head-decoder constants (0x4178CB33/0xF119421B/0x5590AD79) = the data1.dat retry path. Registry consumers mapped: 52 e1 dispatchers -> device 0x8f/0x81/0x1, 16 e3 dispatchers -> 0x96/0x8f, trampoline builder e1+0x836c/0x88fc (0xb0+0x12008 array, 0xb0+0xa54 dispatcher), e3+0x2084 = second-level container processor. Next: M2b data1.dat via e3 formulas+key"
   },
   {
    "id": "signer",
@@ -40,9 +40,9 @@
   {
    "id": "engine-core",
    "name": "Engine core — libgame.so",
-   "done": 4,
+   "done": 12,
    "weight": 20,
-   "note": "section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending"
+   "note": "M2: libgame.so SOLVED as protector-mediated: 121k/121k dynsym blanked, .text = 35KB stub + zero fill, real code = 38.5MB LOUSER+0 appended blob (id 0xf3, register-only, still encrypted with the game-side scheme). Stub fully reversed (raw-svc loader, self-keyed header, stage-1-family cipher). Next: decrypt the f3 game blob / analyze its runtime module loads"
   },
   {
    "id": "engine-graphics",
@@ -61,9 +61,9 @@
   {
    "id": "asset-formats",
    "name": "Asset formats & pipelines",
-   "done": 28,
+   "done": 34,
    "weight": 12,
-   "note": ".idx chunk format + 7ffe container format reversed (unpack_7ffe.py); embedded-module container parsed end-to-end (4 ARM64 sub-modules, still encrypted); 39.9 MB engine blob + data1.dat still encrypted"
+   "note": ".idx chunk format + 7ffe container + embedded-module container reversed; M2 added: libgame.so LOUSER+0 payload format (stage-1-family header + twin stage-2 + twin container), game-side keys recovered. data1.dat + the 38.5MB f3 blob remain - both now tied to e3's formula set/key"
   },
   {
    "id": "build-android",
@@ -129,6 +129,13 @@
    "done": 8,
    "in_progress": 2,
    "per_row": 27
+  },
+  {
+   "label": "Game-side stage-2 system — libgame.so LOUSER payload (1 cell = 10%)",
+   "total": 10,
+   "done": 7,
+   "in_progress": 1,
+   "per_row": 10
   }
  ]
 }
