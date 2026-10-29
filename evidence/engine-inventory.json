@@ -1,0 +1,271 @@
+{
+ "binary": "/home/z/my-project/download/re-work/native-libs/libgame.so",
+ "size_bytes": 109319040,
+ "sections": [
+  {
+   "name": "NULL",
+   "type": "0000000000000000",
+   "offset": 0,
+   "size": 0
+  },
+  {
+   "name": ".note.android.ident",
+   "type": "NOTE",
+   "offset": 568,
+   "size": 152
+  },
+  {
+   "name": ".note.gnu.build-id",
+   "type": "NOTE",
+   "offset": 720,
+   "size": 36
+  },
+  {
+   "name": ".dynsym",
+   "type": "DYNSYM",
+   "offset": 760,
+   "size": 2909808
+  },
+  {
+   "name": ".gnu.version",
+   "type": "VERSYM",
+   "offset": 2910568,
+   "size": 242484
+  },
+  {
+   "name": ".gnu.version_r",
+   "type": "VERNEED",
+   "offset": 3153052,
+   "size": 112
+  },
+  {
+   "name": ".gnu.hash",
+   "type": "GNU_HASH",
+   "offset": 3153164,
+   "size": 868192
+  },
+  {
+   "name": ".dynstr",
+   "type": "STRTAB",
+   "offset": 4021356,
+   "size": 6867839
+  },
+  {
+   "name": ".rela.dyn",
+   "type": "RELA",
+   "offset": 10889196,
+   "size": 76104
+  },
+  {
+   "name": ".rela.plt",
+   "type": "RELA",
+   "offset": 10965300,
+   "size": 1560
+  },
+  {
+   "name": ".gcc_except_table",
+   "type": "PROGBITS",
+   "offset": 17928936,
+   "size": 2014296
+  },
+  {
+   "name": ".rodata",
+   "type": "PROGBITS",
+   "offset": 19943424,
+   "size": 2438576
+  },
+  {
+   "name": ".eh_frame_hdr",
+   "type": "PROGBITS",
+   "offset": 22382000,
+   "size": 758908
+  },
+  {
+   "name": ".eh_frame",
+   "type": "PROGBITS",
+   "offset": 23140912,
+   "size": 4610384
+  },
+  {
+   "name": ".text",
+   "type": "PROGBITS",
+   "offset": 27751296,
+   "size": 38354340
+  },
+  {
+   "name": "__lcxx_override",
+   "type": "PROGBITS",
+   "offset": 66105636,
+   "size": 268
+  },
+  {
+   "name": ".plt",
+   "type": "PROGBITS",
+   "offset": 66105904,
+   "size": 713104
+  },
+  {
+   "name": ".data.rel.ro",
+   "type": "PROGBITS",
+   "offset": 66819008,
+   "size": 1835904
+  },
+  {
+   "name": ".fini_array",
+   "type": "FINI_ARRAY",
+   "offset": 68654912,
+   "size": 16
+  },
+  {
+   "name": ".init_array",
+   "type": "INIT_ARRAY",
+   "offset": 68654928,
+   "size": 23080
+  },
+  {
+   "name": ".dynamic",
+   "type": "DYNAMIC",
+   "offset": 68678008,
+   "size": 528
+  },
+  {
+   "name": ".got",
+   "type": "PROGBITS",
+   "offset": 68678536,
+   "size": 217392
+  },
+  {
+   "name": ".got.plt",
+   "type": "PROGBITS",
+   "offset": 68895928,
+   "size": 356560
+  },
+  {
+   "name": ".relro_padding",
+   "type": "NOBITS",
+   "offset": 69252488,
+   "size": 2680
+  },
+  {
+   "name": ".data",
+   "type": "PROGBITS",
+   "offset": 69252496,
+   "size": 136320
+  },
+  {
+   "name": ".bss",
+   "type": "NOBITS",
+   "offset": 69388816,
+   "size": 2339512
+  },
+  {
+   "name": ".comment",
+   "type": "PROGBITS",
+   "offset": 109316192,
+   "size": 607
+  },
+  {
+   "name": ".shstrtab",
+   "type": "STRTAB",
+   "offset": 109316799,
+   "size": 291
+  },
+  {
+   "name": "LOUSER+0",
+   "type": "0000000000000000",
+   "offset": 39927376,
+   "size": 0
+  }
+ ],
+ "section_count": 29,
+ "elf_class": "ELF64",
+ "machine": "AArch64",
+ "dynsym_defined": 39,
+ "dynsym_imported": 34,
+ "jni_exports": [],
+ "imported_capabilities": {
+  "POSIX syscalls": 26,
+  "other": 4,
+  "stdc++": 2,
+  "libc": 2
+ },
+ "notable_imports": [],
+ "string_count_min6": 70503,
+ "interesting_strings": [
+  "avnMP3b",
+  "__emutls_get_address",
+  "Ywjogg",
+  "PNGBD5",
+  "=sSlj0J22",
+  "CS)9pnG",
+  "]tlSlpp",
+  "<4glm>",
+  "m)'glMhzl",
+  "TlS2T`",
+  "b;hiogG~5I",
+  "GLMyzr",
+  "s(pNgqs",
+  "A#\"c4Ogg",
+  "oSSly-s|",
+  "Ns|PNG(h",
+  "<\tLtlS",
+  "*%[/pnG",
+  "Android (13624864, +pgo, -bolt, +lto, -mlgo, based on r530567e) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)",
+  "Android (13624864, +pgo, +bolt, +lto, +mlgo, based on r530567e) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)"
+ ],
+ "crypto_hint_strings": [
+  "E,,rc4",
+  "#aES0~Q<",
+  "R\t'aES",
+  "aes1_e",
+  "rSal?}",
+  "'WMD5\"$",
+  "x\"aEsj",
+  "}-Zrsa",
+  "duK`wRc4*"
+ ],
+ "urls": [
+  "https://android.googlesource.com/toolchain/llvm-project"
+ ],
+ "defined_sample": [
+  "__xmlRaiseError",
+  "__cxa_bad_cast",
+  "__cxa_guard_abort",
+  "__cxa_throw",
+  "__cxa_guard_acquire",
+  "__htmlParseContent",
+  "__cxa_allocate_exception",
+  "__xmlParserInputBufferCreateFilename",
+  "__xmlIOErr",
+  "__xmlInitializeDict",
+  "__cxa_guard_release",
+  "__cxa_rethrow_primary_exception",
+  "__cxa_pure_virtual",
+  "__xmlSimpleError",
+  "__cxa_current_primary_exception",
+  "__cxa_get_globals_fast",
+  "__xmlErrEncoding",
+  "__cxa_rethrow",
+  "__xmlOutputBufferCreateFilename",
+  "__cxa_unexpected_handler",
+  "__cxa_end_catch",
+  "__cxa_begin_catch",
+  "__emutls_get_address",
+  "__cxa_get_globals",
+  "__cxa_demangle",
+  "__xmlLoaderErr",
+  "__cxa_uncaught_exceptions",
+  "__cxa_call_unexpected",
+  "__cxa_free_exception",
+  "__gxx_personality_v0",
+  "__cxa_terminate_handler",
+  "__cxa_new_handler",
+  "__xmlGlobalInitMutexDestroy",
+  "__cxa_increment_exception_refcount",
+  "__xmlRegisterCallbacks",
+  "__cxa_init_primary_exception",
+  "__cxa_decrement_exception_refcount",
+  "__cxa_get_exception_ptr",
+  "__dynamic_cast"
+ ]
+}

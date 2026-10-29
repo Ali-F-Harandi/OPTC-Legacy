@@ -1,0 +1,27 @@
+{
+ "path": "assets/7ffe/data1.dat",
+ "size": 181700,
+ "magic_hex": "daf1cb3ed184ea5595ead4037df4f90701a4506cc0280014214700a2084effe0",
+ "tail_hex": "76d32eb2fc3c26e784c42b9c50c19cd23fddbc3238d4669e8c4a5f6abfb69fc9",
+ "entropy_1mb": 1.822,
+ "printable_ratio_head": 0.3678,
+ "xor_magic_hits": [],
+ "entropy_windows": [
+  7.97,
+  7.97,
+  7.97,
+  7.98,
+  7.98,
+  7.95,
+  7.96,
+  7.98,
+  7.97,
+  7.98,
+  7.96,
+  7.98,
+  7.96,
+  7.96,
+  7.98,
+  7.95
+ ]
+}

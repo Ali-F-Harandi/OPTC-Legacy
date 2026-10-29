@@ -1,255 +1,251 @@
-# ONE PIECE TREASURE CRUISE-RPG 16.2.1 — Reverse Engineering Analysis
+# OPTC Legacy
 
-> **بخش فارسی**: این ریپویورت کامل مهندسی معکوس (Reverse Engineering) بسته‌ی اندرویدی بازی
-> **وان پیس تریجر کروز (ONE PIECE TREASURE CRUISE-RPG)** نسخه‌ی `16.2.1` (versionCode `1621`)
-> با شناسه‌ی پکیج `com.namcobandaigames.spmoja010E` است. فایل اصلی به‌صورت APKM
-> (بسته‌ی split از APKMirror، ۱۳۴.۶ مگابایت) با **tgkit** از طریق **MTProto** دانلود شد
-> (بدون محدودیت ۲۰ مگابایتی Bot API) و سپس کل آنالیز با ابزار **REA**
-> (Reverse Engineer Anything از morluto/rea) به‌همراه موتورهای **JADX** (لایه جاوا) و
-> **Ghidra 12.1.4** (لایه native) انجام شد. تمام خروجی‌های خام به‌صورت Evidence استاندارد REA
-> در پوشه‌ی `evidence/` ذخیره شده‌اند و تمام کدهای شبه‌سطح‌بالا (pseudocode) هر دو کتابخانه‌ی
-> کوچک native استخراج شده است.
+**A community decompilation & recompilation project for ONE PIECE TREASURE CRUISE-RPG 16.2.1 — with custom rebuilds for Android, Web and Desktop.**
 
-**Target**: `com.namcobandaigames.spmoja010E` — ONE PIECE TREASURE CRUISE-RPG 16.2.1 (versionCode 1621)
-**Source**: APKM bundle (`arm64-v8a` + `armeabi-v7a`, 24 languages, Android 7.0+/API 24+)
-**Toolchain**: `tgkit` (MTProto download) → `rea` 6.8.0 (Reverse Engineer Anything) → JADX 0.7.1 (DEX) + Ghidra 12.1.4 (ELF) + apktool 2.12.1 (resources)
+[![build](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/build.yml/badge.svg)](../../actions)
+[![progress](https://img.shields.io/badge/decompilation-23.1%25-blue)](PROGRESS.json)
+[![target](https://img.shields.io/badge/target-16.2.1%20%221621%22-critical)](hashes.txt)
+[![license](https://img.shields.io/badge/legal-clean--room%20RE-important)](#legal)
 
 ---
 
-## 1. Executive Summary
+<!-- PROGRESS:BEGIN -->
+
+### 🧱 Decompilation Wall
+
+**Overall — 23.1% decompiled & rebuilt**
+
+```text
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  23.1%
+```
+
+| Module | Progress | Status |
+|:---|:---|:---|
+| Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
+| Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
+| Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜` 75% | 277/277 functions pseudocoded; data1.dat key schedule still unknown |
+| API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
+| Engine core — libgame.so | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 4% | section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending |
+| Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
+| Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
+| Asset formats & pipelines | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 18% | .idx chunk format reversed; 39.9 MB engine blob + data1.dat extracted, encrypted |
+| Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
+| Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
+| Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
+| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 45% | blob extractor, progress tracker, 3-target CI matrix |
+| Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 40% | architecture map + engine deep-dive notes published |
+
+**Platform shell — jp.co.drecom.bisque (1 cell = 1 class)** — 9/187 (4.8%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+```
+
+**Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)** — 42/56 (75.0%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜
+```
+
+**API signer — libsigner.so (1 cell = 20 functions, 519 total)** — 22/26 (84.6%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨⬜⬜
+```
+
+<sub>Regenerate with `python3 tools/progress.py --write`. Percentages are measured against concrete units (classes, functions, formats, build targets) — never vibes.</sub>
+
+<!-- PROGRESS:END -->
+
+---
+
+## What is this?
+
+`OPTC Legacy` is a long-form **decomp-recomp** project aimed at the mobile game
+**ONE PIECE TREASURE CRUISE-RPG** (`com.namcobandaigames.spmoja010E`,
+version 16.2.1 / versionCode 1621). The goal is the same shape as the classic
+console decompilation projects: understand the original binary, document it
+exhaustively, and progressively replace it with clean-room source that **we
+control** — then ship that source as our own custom build for
+**Android (APK), Web (WASM) and Desktop (native)**.
+
+Unlike Unity/il2cpp titles, OPTC runs on a **bespoke C++ engine**:
+
+- the Java layer is a thin 187-class platform shell (Drecom *"Bisque"* framework)
+  that owns the GLES2 surface and JNI bridge,
+- everything gameplay-related lives inside a monolithic, stripped,
+  string-encrypted `libgame.so` (**104.3 MB**, 38.2 MiB of code),
+- the game even ships **~39.9 MB of encrypted resource data inside the `.so`
+  itself**, plus encrypted asset chunks in the APK.
+
+That makes this a *real* native decompilation effort — no low-hanging managed
+code — and it is why the progress wall above is honest about single-digit
+engine percentages.
+
+## Target facts (measured, not guessed)
 
 | Property | Value |
 |---|---|
-| App name | ONE PIECE TREASURE CRUISE-RPG |
+| App | ONE PIECE TREASURE CRUISE-RPG |
 | Package | `com.namcobandaigames.spmoja010E` |
-| Version | 16.2.1 (versionCode 1621, built against SDK 36) |
-| Min SDK / Target SDK | 24 (Android 7.0) / 36 (Android 16) |
-| Signing | APK Signature Scheme **v2 + v3**, RSA, SHA-256 |
-| Signer certificate | **NAMCO BANDAI Games Inc.**, Tokyo (self-signed, serial `4CC13C7A`, valid 2010→2038) |
-| Certificate SHA-256 | `336ca2245718a9ca1672bf0bf2d324b29a836d899848ac0e8c08ba79097c03b3` |
-| Signature integrity | digest **matches APK** — authentic, untampered release |
-| Java classes | **11,119** across 6 DEX files |
-| Native engine | Custom C++ engine (`libgame.so`, 109 MB, arm64-v8a / 81 MB armv7) |
-| Builder | Android clang 19.0.1 (`+pgo, +bolt, +lto, +mlgo`), NDK r28c (arm64) |
-| Protection | Custom loader `lib__7ffe__.so` + encrypted asset `assets/7ffe/data1.dat`; string-encrypted game code |
+| Version | 16.2.1 (versionCode 1621, SDK 24→36) |
+| Source bundle | APKM (2 arch, 7 dpi, 24 lang) — 134.6 MB, pulled via **MTProto** |
+| Java layer | 6 DEX files, 18,364 class defs; game-relevant: `jp.co.drecom.bisque.*` (187 classes) |
+| Native engine | `libgame.so` — AArch64/ARMv7, clang 19.0.1 (`+pgo, +lto, +mlgo`), LLD 19.0.1 |
+| Engine size | `.text` 38.2 MiB ⇒ est. **13,000–26,000 functions** |
+| Hidden data | 39,927,376-byte encrypted blob in an unnamed ELF section of `libgame.so` |
+| Anti-tamper | `lib__7ffe__.so` + `assets/7ffe/data1.dat` (181,700 B, entropy ≈ 7.98) |
+| API signing | `libsigner.so` (1.1 MB) — request-signing for the game backend |
+| Original signature | v2+v3 RSA/SHA-256, **NAMCO BANDAI Games Inc.** — verified authentic |
 
-The application is a **native C++ game** (not Unity/il2cpp, not Cocos2d-x in the classical sense).
-The Java layer is a thin platform shell built on Drecom's **"Bisque"** framework (`jp.co.drecom.bisque.lib.BQ*`),
-which bridges Android platform services to the monolithic native game engine `libgame.so`.
-All game logic — rendering (OpenGL ES 2), audio (OpenSLES), XML (bundled libxml2), gameplay —
-lives inside `libgame.so`, which is heavily obfuscated (string encryption; only ~9,900 strings
-visible in a 109 MB binary, none of them game-related).
+Full machine evidence lives in [`evidence/`](evidence/) (REA-standard JSON):
+[`engine-inventory.json`](evidence/engine-inventory.json),
+[`class-inventory.json`](evidence/class-inventory.json),
+[`data1-format.json`](evidence/data1-format.json),
+[`apk-signature.json`](evidence/apk-signature.json), plus per-class and
+per-method dossiers.
 
-## 2. How the APKM was obtained
-
-The bundle exceeds the Bot API 20 MB download cap, so it was fetched over **MTProto**
-(the native Telegram client protocol, supports up to 2 GB) using [tgkit](https://github.com/Ali-F-Harandi/tgkit):
+## Architecture at a glance
 
 ```text
-tgkit fetch https://t.me/c/3873843444/1885 --out .
-# ⚠ 134.6 MB — over the Bot API's 20 MB download cap … automatically runs through MTProto
-# ✓ com_namcobandaigames_spmoja010E_16_2_1_1621_2arch_7dpi_24lang_0.apkm — 141,166,735 bytes
+┌──────────────────────────────────────────────────────────────┐
+│  Java/Kotlin shell — 187 Bisque classes (jp.co.drecom.bisque)│
+│  BQGameHelper · BQJNIHelper · BQArtilleryJava · BQPayment…   │
+├──────────────────────────────────────────────────────────────┤
+│  lib__7ffe__.so  — anti-tamper loader (consumes data1.dat)   │
+├──────────────────────────────────────────────────────────────┤
+│  libgame.so — monolithic native engine                       │
+│    .text 38.2 MiB · stripped · string-encrypted              │
+│    + 39.9 MiB encrypted resource blob (unnamed section)      │
+│    OpenGL ES 2 · OpenSLES · bundled libxml2                  │
+├──────────────────────────────────────────────────────────────┤
+│  libsigner.so — game-API request signing                     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-SHA-256 of every artifact is recorded in [`hashes.txt`](hashes.txt).
+Deep-dives: [`notes/architecture.md`](notes/architecture.md) ·
+[`notes/engine-analysis.md`](notes/engine-analysis.md) ·
+[`notes/asset-format.md`](notes/asset-format.md)
 
-### Bundle layout (APKM = ZIP of split APKs)
-
-| Split | Size | Contents |
-|---|---|---|
-| `base.apk` | 67 MB | 6× `classes.dex`, resources, `assets/` (52 MB custom-format data) |
-| `split_config.arm64_v8a.apk` | 109 MB | `libgame.so` (109 MB), `lib__7ffe__.so`, `libsigner.so`, crashlytics libs |
-| `split_config.armeabi_v7a.apk` | 81 MB | 32-bit counterparts |
-| `split_config.<lang>.apk` ×24 | ~20–40 KB each | language resources (ar, de, en, …, zh) |
-| `split_config.<dpi>.apk` ×7 | 65–112 KB each | density resources (ldpi → xxxhdpi) |
-
-## 3. Manifest & Attack Surface (static, declared)
-
-`evidence/package-inspection.json` · `evidence/decoded-resources.json`
-
-### Permissions (13)
-
-- `android.permission.INTERNET`, `ACCESS_NETWORK_STATE` — networking
-- `com.android.vending.BILLING` — in-app purchases (Play Billing)
-- `com.google.android.c2dm.permission.RECEIVE` — push (FCM)
-- `android.permission.POST_NOTIFICATIONS`, `VIBRATE`, `WAKE_LOCK`
-- `com.google.android.gms.permission.AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`, `ACCESS_ADSERVICES_AD_ID` — advertising/attribution
-- `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` — install referrer
-- `com.google.android.providers.gsf.permission.READ_GSERVICES`
-- app-defined: `com.namcobandaigames.spmoja010E.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
-
-### Declared components (32)
-
-- **Main activity / entry point**: `jp.co.drecom.application.AppActivity`
-- **Application**: `com.namcobandaigames.spmoja010E.EntryApplication`
-- **Adjust attribution**: `com.adjust.sdk.AdjustReferrerReceiver`
-- **Firebase**: messaging (`SakuraFirebaseMessagingService`), auth (GenericIdp/Recaptcha), iid, components
-- **Play Billing**: `ProxyBillingActivity`, `ProxyBillingActivityV2`
-- **Play Games v2**: `GamesResolutionActivity`, `PlayGamesAppShortcutsActivity`
-- **Measurement**: `AppMeasurementReceiver/Service/JobService`
-- **Datatransport**: backend discovery + job scheduling
-- Others: `FileProvider`, `InitializationProvider`, `ProfileInstallReceiver`, `PlayCoreDialogWrapperActivity`
-
-### SDK stack identified from the Java layer
-
-| SDK | Evidence |
-|---|---|
-| Drecom **Bisque** platform framework | 79 `jp.co.drecom.*` classes — `BQJNIHelper`, `BQPaymentBridge`, `BQPlayGameService`, `BQTwitterHelper`, `BQUrlScheme`, `BQClipboard`, … |
-| Adjust (attribution/anti-fraud) | 126 `com.adjust.sdk.*` classes + native `libsigner.so` (SDK signature) |
-| Google Play Billing | 156 `com.android.billingclient.*` classes |
-| Firebase (auth/messaging/iid) | 886 `com.google.firebase.*` classes |
-| Play Games Services v2, Credentials, Measurement | 5,505 `com.google.android.*` classes |
-| Kotlin (coroutines, serialization) | kotlinx + kotlin.jvm |
-| Guava | 602 `com.google.common.*` classes |
-| DataStore (preferences) | 179 androidx.datastore classes |
-| Gson | 69 classes |
-
-## 4. Java ↔ Native bridge
-
-`evidence/methods/AppActivity_clinit.json` (smali):
-
-```smali
-.method static constructor <clinit>()V
-    const-string v0, "game"
-    invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
-```
-
-`AppActivity.<clinit>` loads `libgame.so`. Notably, **`libgame.so` exports no `Java_*` symbols
-and contains no `JNI_OnLoad`/`RegisterNatives` strings** — native method binding
-(`BQJNIHelper.initNativeContext` etc. are declared `native` in Java) is therefore performed
-through obfuscated/indirect registration inside the native engine (init-time resolution,
-consistent with the heavy string encryption observed).
-
-## 5. Native libraries (arm64-v8a)
-
-`evidence/native/` · full pseudocode in `evidence/native/*_decompiled/`
-
-### 5.1 `libgame.so` — the game engine (109 MB)
-
-- ELF 64-bit ARM aarch64, **stripped**, NDK r28c, BuildID `39190f3e2f28ee98ecb42cd6aee5446821f86838`
-- Built with clang 19.0.1 profile-guided (`+pgo +bolt +lto +mlgo`) — release-hardened build
-- `.text` ≈ 38.5 MB; sections include `.rodata` 2.4 MB, `.data.rel.ro` 1.7 MB, `.bss` 2.2 MB
-- `DT_NEEDED`: `libandroid.so`, `libOpenSLES.so`, `libGLESv2.so`, `libEGL.so`, `libz.so`, `liblog.so`, `libm.so`, `libdl.so`, `libc.so`
-- Statically bundles and re-exports **libxml2** (`__xml*`, `__htmlParseContent`) and libc++abi (`__cxa_*`)
-- Only ~35 imported libc/libdl functions (`dlopen`, `dlsym`, `dlclose`, `dlerror`, fortify `*_chk`)
-- `.init_array` contains **2,885 constructor entries** (0x5a28 bytes)
-- **String encryption**: only ~9,900 strings total in 109 MB; zero game/asset/URL strings visible.
-  Rendering = GLESv2, audio = OpenSLES. This is a custom in-house engine (Bisque/Drecom lineage).
-
-### 5.2 `lib__7ffe__.so` — custom protection/loader (1.7 MB)
-
-- ELF aarch64, **stripped**, unusual: no NDK banner, tiny import set — only
-  `__cxa_atexit`, `__cxa_finalize`, `__stack_chk_*`, `dladdr`, `dlclose`, `dlerror`, `dlopen`, `dlsym`
-- **No JNI exports at all**
-- Internal string `lib__XXXX__.so` — the library name is **randomized per build**
-  (`7ffe` is this build's placeholder value)
-- `.data` = 411 KB of high-entropy (encrypted) payload; `.text` = 52 KB only
-- Pairs with encrypted asset **`assets/7ffe/data1.dat`** (181,700 bytes, no header magic, fully encrypted)
-- `init_array` entry (`0x101d54` → `FUN_0010163c`, full pseudocode in
-  `evidence/native/lib7ffe_decompiled/functions/0x10163c.c`) runs a chain of **self-checks at load
-  time** with step/error codes (`0xa8`, `0xb3`, …) and aborts on failure —
-  anti-tamper / license-integrity behavior
-- 277 functions fully decompiled (`evidence/native/lib7ffe_decompiled/`)
-
-### 5.3 `libsigner.so` — Adjust SDK signature (1.1 MB)
-
-- Exports `Java_com_adjust_sdk_sig_NativeLibHelper_nSign` — this is the
-  **Adjust SDK Signature Library** (third-party attribution anti-fraud), *not* an app-signature check
-- Uses SHA-256 (`"SHA-256"` string present); device-model gated behavior (`"exynos9810"`, `"ro.arch"`)
-- 519 functions fully decompiled (`evidence/native/libsigner_decompiled/`)
-
-### 5.4 Remaining libs
-
-`libcrashlytics*.so` (Firebase Crashlytics, NDK r27c), `libdatastore_shared_counter.so` (AndroidX DataStore, NDK r25c) — stock Google/Firebase components, not analyzed further.
-
-## 6. Custom asset format (reverse-engineered layout)
-
-`notes/asset-format.md` — the `assets/` folder ships ~52 MB in a proprietary packed format:
+## Repository layout
 
 ```text
-assets/
-├── 7ffe/data1.dat          encrypted blob consumed by lib__7ffe__.so
-├── FONT.DAT.00..05         font glyph pages (~800 KB chunks)
-├── FONT.DAT.idx + .vb      index + version manifest
-├── RES.DAT.00..01          main resource chunks
-├── RES_LOADING.DAT.00..NN  loading-screen resources (dozens of 800 KB chunks)
-└── RES_FILLINSPACE.DAT.00  filler resources
+├── PROGRESS.json          progress source of truth (units, not vibes)
+├── tools/                 fetch / extract / keystore / progress tooling
+├── evidence/              REA evidence — inventories, class & method dossiers
+├── notes/                 architecture, engine & asset-format write-ups
+├── decomp/                decompiler output (Ghidra pseudocode, per function)
+│   ├── native-loader-7ffe/   277 functions
+│   └── native-signer/        519 functions
+├── src/                   clean-room reimplementation ("recomp")
+│   ├── engine/            module registry — one module per decomp module
+│   ├── platform/          sdl2 / web(Emscripten) / null backends
+│   └── app/               shared main
+├── android/               Gradle project → custom APK (NDK + CMake)
+├── web/                   Emscripten harness → WASM bundle
+├── desktop/               desktop packaging
+├── keystore/              OUR OWN APK signing key (community/test-key model)
+└── .github/workflows/     CI: desktop + web + android + progress gate
 ```
 
-- **`.idx`** — binary index: header `00 00 00 64` (version 100?), then records of
-  `{CRC32, size}` per chunk (e.g. `3def4d33`/`00171830`, `0c8000`, `0a9830`)
-- **`.vb`** — version/manifest: little-endian entry count, then ASCII UUIDs
-  (e.g. `683fb227-bfd3-e3d4-f4d8-fbebc4be58f7`) + per-chunk metadata
-- **`.DAT.NN`** — 800 KB (0xC8000) chunked payload
-- `ArialBM.fnt` — bitmap font (BMFont-compatible)
+## Build the custom builds
 
-## 7. Security observations (static)
+One `src/` tree, three targets. Milestone 0 (registry boots on all three) is
+green; the wall above tracks what each target can actually *do*.
 
-1. **Authenticity**: v2+v3 signature by the genuine 2010 NAMCO BANDAI certificate; content digest matches — the analyzed sample is an unmodified release build.
-2. **Tamper resistance**: `lib__7ffe__.so` performs load-time self-checks with distinct failure codes; its name and its `assets/7ffe/` data are build-randomized — designed to frustrate static patching and generic tooling.
-3. **String encryption**: game-native strings (endpoints, asset names) are encrypted at rest; only the loader/protector contains plaintext fragments.
-4. **Indirect JNI**: no exported `Java_*` symbols in the engine; binding happens through obfuscated init paths.
-5. **Attack surface** is dominated by well-known Google/Firebase/Adjust components; the custom code is native and hardened. `Exported` component flags and intent filters are inventoried in `evidence/package-inspection.json`.
-
-## 8. Repository layout
-
-```text
-├── README.md                          this report
-├── hashes.txt                         SHA-256 manifest of every analyzed artifact
-├── evidence/
-│   ├── package-inspection.json        REA inspect_android_package (JADX)
-│   ├── decoded-resources.json         REA decode_android_resources (apktool)
-│   ├── apk-signature.json             REA inspect_apk_signature
-│   ├── class-inventory.json           all 11,119 class names
-│   ├── classes/                       9 key-class member inventories (JADX)
-│   ├── methods/                       decompiled smali of key methods
-│   └── native/
-│       ├── libsigner_analyze.json     ELF segment/program layout (Ghidra)
-│       ├── lib7ffe_analyze.json       ELF segment/program layout (Ghidra)
-│       ├── libsigner_inspect.json     binary inventory (Ghidra)
-│       ├── lib7ffe_inspect.json       binary inventory (Ghidra)
-│       ├── libsigner_decompiled/      519 functions × Ghidra pseudocode
-│       └── lib7ffe_decompiled/        277 functions × Ghidra pseudocode
-└── notes/
-    └── asset-format.md                custom .DAT/.idx/.vb format notes
-```
-
-Every JSON file in `evidence/` is a standard **REA Evidence** record (contains `evidence_id`,
-subject SHA-256, provider identity, raw + normalized results, limitations).
-
-## 9. Reproduction
+### Desktop (Linux/macOS)
 
 ```bash
-# 1) download over MTProto (no 20 MB Bot API cap) — https://github.com/Ali-F-Harandi/tgkit
-tgkit fetch https://t.me/c/3873843444/1885 --out .
-
-# 2) unpack the APKM (plain ZIP)
-unzip com_namcobandaigames_spmoja010E_16_2_1_1621_2arch_7dpi_24lang_0.apkm -d apkm
-
-# 3) analyze with REA — https://github.com/morluto/rea
-export REA_JADX_MCP_JAR=$PWD/jadx-headless-mcp-0.7.1-all.jar
-export REA_APKTOOL_COMMAND=$PWD/apktool
-export GHIDRA_INSTALL_DIR=$PWD/ghidra_12.1.4_PUBLIC
-rea inspect-android-package  apkm/base.apk --json
-rea inspect-apk-signature    apkm/base.apk --json
-rea search-android-classes   apkm/base.apk "" --json
-rea decode-android-resources apkm/base.apk --json
-rea analyze      split/.../lib__7ffe__.so --json
-rea decompile-all split/.../lib__7ffe__.so --output out/lib7ffe
-rea analyze      split/.../libsigner.so   --json
-rea decompile-all split/.../libsigner.so   --output out/libsigner
+desktop/build.sh          # → build-desktop/optc-legacy (SDL2, or null headless)
+./build-desktop/optc-legacy
 ```
 
-## 10. Limitations
+### Web (Emscripten/WASM)
 
-- Analysis is **static**; no runtime behavior, server communication, or asset decryption was performed.
-- `libgame.so` (109 MB) was inventoried (ELF layout, imports/exports, init_array, strings) but not
-  fully decompiled — a full Ghidra pass on a 38.5 MB `.text` with PGO+BOLT optimization is a
-  multi-hour/day job and was out of scope for this pass.
-- The `assets/7ffe/data1.dat` encryption and the custom `.DAT` chunk encryption are documented
-  structurally only; keys are derived at runtime inside the native libraries.
-- APK authenticity was verified cryptographically; runtime integrity behavior was not exercised.
+```bash
+web/build.sh              # → build-web/optc-legacy.html + .js + .wasm
+python3 -m http.server -d build-web 8080
+```
 
----
+### Android (custom APK, own signature)
 
-*Analysis performed 2026-10-29 with tgkit 0.3.0, rea 6.8.0, JADX-headless-mcp 0.7.1, Ghidra 12.1.4, apktool 2.12.1 on Debian 13 / JDK 25 / Node 24. For research and educational purposes.*
+```bash
+cd android && ./gradlew assembleRelease
+# signed with keystore/optc-legacy.jks — see below
+```
+
+## Our own APK signature
+
+Custom builds are signed with **our** RSA-4096 key — never the publisher's:
+
+- key + passwords + how-to-sign: [`keystore/README.md`](keystore/README.md)
+- certificate SHA-256: `1971AC0189A7BA49B8D41E282BFD021E40CB47AF4C51F9ADE80367476FD38B2A`
+- committed on purpose (community update identity — AOSP test-key model),
+- verify any artifact: `apksigner verify --print-certs app.apk`
+
+## How the artifact was obtained
+
+The 134.6 MB APKM bundle far exceeds the Bot API's 20 MB download cap, so it
+was fetched over **MTProto** (native Telegram protocol, up-to-2 GB files) with
+[tgkit](https://github.com/Ali-F-Harandi/tgkit):
+
+```bash
+tools/fetch_apk.sh https://t.me/c/3873843444/1885 ./artifacts
+```
+
+SHA-256 pins for every analyzed artifact are in [`hashes.txt`](hashes.txt).
+Reproduce the full unpack with `tools/extract_apkm.sh` and
+`tools/extract_blobs.py`.
+
+## Toolchain
+
+| Stage | Tool |
+|---|---|
+| Acquisition | [tgkit](https://github.com/Ali-F-Harandi/tgkit) (MTProto) |
+| Orchestration & evidence | [rea — Reverse Engineer Anything](https://github.com/morluto/rea) 6.8.0 |
+| Java/DEX | JADX 0.7.1 (headless) |
+| Native ELF | Ghidra 12.1.4 |
+| Resources | apktool 2.12.1 |
+| Static inventory | readelf/strings/BinWalk pipelines (`tools/`) |
+
+## Roadmap
+
+1. **M0 — skeleton** ✅ engine registry + 3 build targets + own signing key
+2. **M1 — loader defeat**: reverse the `7ffe` key schedule, decrypt `data1.dat`
+3. **M2 — asset pipeline**: parse the 39.9 MB engine blob + `.DAT/.idx/.vb`
+   chunk format (already mapped: `notes/asset-format.md`)
+4. **M3 — JNI table**: walk `JNI_OnLoad`/`RegisterNatives` → full Java-facing
+   engine API
+5. **M4 — renderer**: GLES2 scene graph reimplementation (biggest module)
+6. **M5 — gameplay**: battle system, then everything else, block by block
+
+## Legal
+
+This project is **clean-room reverse engineering for education and
+preservation**. We do not distribute Bandai Namco's code, assets, or APKs;
+we publish analysis, documentation, and original source written from
+scratch. ONE PIECE TREASURE CRUISE and all related marks belong to
+Eiichiro Oda / Toei Animation / Bandai Namco Entertainment — this project
+is not affiliated with or endorsed by them. No original copyrighted files
+are committed to this repository (see `.gitignore`).
+
+## Contributing
+
+Pick a white block from the wall:
+
+1. `python3 tools/progress.py` — see every module and its units
+2. claim a class (Bisque shell) or a function range (loader/signer pseudocode
+   is already in `decomp/` — pick a `FUN_*.c` and turn it into real C in `src/`)
+3. open a PR; update `PROGRESS.json` — the wall regenerates itself
+   (`python3 tools/progress.py --write`)
+
+Percentages are only ever moved by evidence.

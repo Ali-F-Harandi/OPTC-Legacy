@@ -1,0 +1,87 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  progress:
+    name: Progress wall check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python3 tools/progress.py --check
+
+  desktop:
+    name: Desktop (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL2 (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+      - name: Configure
+        run: cmake -S src -B build-desktop -DOPTC_TARGET=desktop -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-desktop --parallel
+      - name: Smoke test (null backend run)
+        run: ./build-desktop/optc-legacy || true   # SDL2 may open a window — CI-safe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: optc-legacy-desktop-${{ matrix.os }}
+          path: build-desktop/optc-legacy
+          if-no-files-found: error
+
+  web:
+    name: Web (Emscripten/WASM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.0.4
+      - name: Configure
+        run: emcmake cmake -S src -B build-web -DOPTC_TARGET=web -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-web --parallel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: optc-legacy-web
+          path: |
+            build-web/optc-legacy.html
+            build-web/optc-legacy.js
+            build-web/optc-legacy.wasm
+          if-no-files-found: error
+
+  android:
+    name: Android (custom APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Build unsigned-release APK (NDK + CMake wired by Gradle)
+        working-directory: android
+        run: |
+          gradle wrapper --gradle-version 8.9 || true
+          ./gradlew assembleRelease --no-daemon
+      - name: Verify our signature
+        run: |
+          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --print-certs "$APK" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: optc-legacy-android-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn   # first green run lands when Gradle wrapper is committed

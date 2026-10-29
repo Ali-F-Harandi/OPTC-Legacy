@@ -5,3 +5,13 @@
 *.dat
 *.session
 config.json
+
+# build outputs
+build-desktop/
+build-web/
+build-android/
+android/.gradle/
+android/app/build/
+android/build/
+local.properties
+*.jks.pwd
