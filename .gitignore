@@ -1,0 +1,7 @@
+*.apk
+*.apkm
+*.so
+*.dex
+*.dat
+*.session
+config.json
