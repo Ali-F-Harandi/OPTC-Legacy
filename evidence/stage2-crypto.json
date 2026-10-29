@@ -10,33 +10,94 @@
   "notes": "Ghidra's default pass misses the crypto block 0x10500-0x11d10 (non-contiguous, reached only via mid-function branches); recovered by forced function creation"
  },
  "memory_map": [
-  {"range": "0x00000-0x10500", "role": "ARM64 code"},
-  {"range": "0x10500-0x11d10", "role": "second inlined AES round function (hidden from default analysis)"},
-  {"range": "0x11d10-0x13110", "role": "AES tables Td0-Td3 + replicated inverse S-box"},
-  {"range": "0x13110-0x13150", "role": "AES Rcon"},
-  {"range": "0x13150-0x16000", "role": "custom relocation table + eh_frame-like data"},
-  {"range": "0x256b0-0x25738", "role": "import names: liblog.so libstdc++.so libm.so libc.so libz.so libdl.so"},
-  {"range": "0x257e0-0x257ec", "role": "config: 0x55, 0x26, 0x14B4 (stream key/seed), 0"},
-  {"range": "0x257f0-0x258e4", "role": "shipped AES-256 context"},
-  {"range": "0x258f0-0x258f4", "role": "u32 0xF4 = sizeof(ctx)"},
-  {"range": "0x258f8-0x25918", "role": "runtime globals set by ENTRY: obj ptr, container ptr, container len, 0x1800 scratch ptr"},
-  {"range": "0x2591c", "role": "container runtime seed = deob_head_w1 + acc, written by 0x13f0 at boot"}
+  {
+   "range": "0x00000-0x10500",
+   "role": "ARM64 code"
+  },
+  {
+   "range": "0x10500-0x11d10",
+   "role": "second inlined AES round function (hidden from default analysis)"
+  },
+  {
+   "range": "0x11d10-0x13110",
+   "role": "AES tables Td0-Td3 + replicated inverse S-box"
+  },
+  {
+   "range": "0x13110-0x13150",
+   "role": "AES Rcon"
+  },
+  {
+   "range": "0x13150-0x16000",
+   "role": "custom relocation table + eh_frame-like data"
+  },
+  {
+   "range": "0x256b0-0x25738",
+   "role": "import names: liblog.so libstdc++.so libm.so libc.so libz.so libdl.so"
+  },
+  {
+   "range": "0x257e0-0x257ec",
+   "role": "config: 0x55, 0x26, 0x14B4 (stream key/seed), 0"
+  },
+  {
+   "range": "0x257f0-0x258e4",
+   "role": "shipped AES-256 context"
+  },
+  {
+   "range": "0x258f0-0x258f4",
+   "role": "u32 0xF4 = sizeof(ctx)"
+  },
+  {
+   "range": "0x258f8-0x25918",
+   "role": "runtime globals set by ENTRY: obj ptr, container ptr, container len, 0x1800 scratch ptr"
+  },
+  {
+   "range": "0x2591c",
+   "role": "container runtime seed = deob_head_w1 + acc, written by 0x13f0 at boot"
+  }
  ],
  "crypto": {
   "aes": {
    "implementation": "T-table equivalent inverse cipher, big-endian block I/O",
-   "block_decrypt": ["0x104f8", "0xff24"],
-   "cbc_driver": ["0x10204", "0xfc30"],
+   "block_decrypt": [
+    "0x104f8",
+    "0xff24"
+   ],
+   "cbc_driver": [
+    "0x10204",
+    "0xfc30"
+   ],
    "iv": "zero (16 bytes)",
    "keysize_check": "0x10468 (accepts 0x80/0xc0/0x100 bits)",
    "rounds_from_keysize": "0x104a0 (10/12/14)",
    "tables": {
-    "Td0": {"offset": "0x11d10", "standard": true, "differing_entries": 0},
-    "Td1": {"offset": "0x12110", "standard": true, "differing_entries": 0},
-    "Td2": {"offset": "0x12510", "standard": true, "differing_entries": 0},
-    "Td3": {"offset": "0x12910", "standard": true, "differing_entries": 0},
-    "ISbox_replicated": {"offset": "0x12d10", "standard": true, "differing_entries": 0},
-    "Rcon": {"offset": "0x13110"}
+    "Td0": {
+     "offset": "0x11d10",
+     "standard": true,
+     "differing_entries": 0
+    },
+    "Td1": {
+     "offset": "0x12110",
+     "standard": true,
+     "differing_entries": 0
+    },
+    "Td2": {
+     "offset": "0x12510",
+     "standard": true,
+     "differing_entries": 0
+    },
+    "Td3": {
+     "offset": "0x12910",
+     "standard": true,
+     "differing_entries": 0
+    },
+    "ISbox_replicated": {
+     "offset": "0x12d10",
+     "standard": true,
+     "differing_entries": 0
+    },
+    "Rcon": {
+     "offset": "0x13110"
+    }
    },
    "shipped_ctx": {
     "offset": "0x257f0",
@@ -73,7 +134,10 @@
  },
  "container_format": {
   "parser": "0xdd70",
-  "pipeline_fragment": ["0xdacc", "0xdafc"],
+  "pipeline_fragment": [
+   "0xdacc",
+   "0xdafc"
+  ],
   "seed": "((x*x)>>17) ^ ((x*x)<<11), x=[0x257e8]=0x14B4",
   "header_formulas": {
    "d0_total_size": "seed*0xF87B337C + (0xA21DFB3A << (seed&7)) + clmul(0x94511DD2, w0)",
@@ -84,14 +148,22 @@
   "data1_dat": {
    "size": 181700,
    "structure": "4 + 181696 (tail exactly 16-byte aligned = 11356 AES blocks)",
-   "status": "NOT the embedded container (see embedded_module_container); loaded later via the game-side path, seed unknown — 4-byte head 0x3ecbf1da is a candidate"
+   "status": "NOT the embedded container (see embedded_module_container); loaded later via the game-side path, seed unknown \u2014 4-byte head 0x3ecbf1da is a candidate"
   }
  },
  "embedded_module_container": {
   "location": "lib__7ffe__.so file [0x9B1EC, 0x1A2048) = the LOUSER+0 bytes after the stage-2 blob",
   "size": 1076828,
   "handoff": "stage-1 blr x8 @0x1c68: x4 = payload + align4(hdr[+8]+hdr[+0xC]) = 0x9B1EC; x5 = plen-0x25990 = 0x106E5C (exact LOUSER remainder)",
-  "activation_chain": ["ENTRY 0x5d4", "0x938", "trampoline 0x550", "0x4a0 (count=0xE2 hardcoded)", "0x964 orchestrator", "0x13f0 head decoder", "0x15f4 entry reader"],
+  "activation_chain": [
+   "ENTRY 0x5d4",
+   "0x938",
+   "trampoline 0x550",
+   "0x4a0 (count=0xE2 hardcoded)",
+   "0x964 orchestrator",
+   "0x13f0 head decoder",
+   "0x15f4 entry reader"
+  ],
   "layout": "[8B obfuscated head][4 x 0x5C obfuscated entries][~1MB encrypted blobs]",
   "head_decoder": {
    "function": "0x13f0",
@@ -105,20 +177,132 @@
    "word_transform": "w ^= (st*st)>>3 [32-bit mul THEN shift]; w = clmul(0x94511DD2, w); w ^= ((seed+0x96F60B71)*seed) << ((index+1)&3); w += (off+1)*0x79934CF6 + seed; w -= ((seed+0x9D9B673D)*seed) >> ((off+3)&5) [32-bit mul THEN shift]; st = raw (init 0xF02F7685)"
   },
   "entry_word_map": {
-   "+0x00": "device id", "+0x04": "flags (bit1 = blob at +8, bit8 = register-only)",
-   "+0x08": "src offset (from container+8)", "+0x0C": "src size",
-   "+0x10": "dst offset", "+0x14": "dst size",
-   "+0x18": "id repeat", "+0x1C": "init-fn offset in blob", "+0x20": "second fn-ptr offset in blob"
+   "+0x00": "device id",
+   "+0x04": "flags (bit1 = blob at +8, bit8 = register-only)",
+   "+0x08": "src offset (from container+8)",
+   "+0x0C": "src size",
+   "+0x10": "dst offset",
+   "+0x14": "dst size",
+   "+0x18": "id repeat",
+   "+0x1C": "init-fn offset in blob",
+   "+0x20": "second fn-ptr offset in blob"
   },
   "entries": [
-   {"id": "0x81", "flags": "0x20000", "src_off": "0x178", "src_size": "0x140d8", "dst_off": "0x2ef4", "dst_size": "0x2b2", "file_off": "0x9b36c"},
-   {"id": "0x96", "flags": "0x0", "src_off": "0x3428", "src_size": "0x2a870", "dst_off": "0x1443c", "dst_size": "0xe10", "fnptr2": "0xe678", "file_off": "0x9e61c"},
-   {"id": "0xf3", "flags": "0x102", "src_off": "0x14fdc", "src_size": "0xec884", "file_off": "0xb01d0", "note": "969KB big module, register-only (bit8)"},
-   {"id": "0xe3", "flags": "0x0", "src_off": "0x101860", "src_size": "0x1a638", "dst_off": "0x1067c0", "dst_size": "0x811", "init_fn": "0x23d8", "fnptr2": "0x5ad8", "file_off": "0x19ca54"}
+   {
+    "id": "0x81",
+    "flags": "0x20000",
+    "src_off": "0x178",
+    "src_size": "0x140d8",
+    "dst_off": "0x2ef4",
+    "dst_size": "0x2b2",
+    "file_off": "0x9b36c"
+   },
+   {
+    "id": "0x96",
+    "flags": "0x0",
+    "src_off": "0x3428",
+    "src_size": "0x2a870",
+    "dst_off": "0x1443c",
+    "dst_size": "0xe10",
+    "fnptr2": "0xe678",
+    "file_off": "0x9e61c"
+   },
+   {
+    "id": "0xf3",
+    "flags": "0x102",
+    "src_off": "0x14fdc",
+    "src_size": "0xec884",
+    "file_off": "0xb01d0",
+    "note": "969KB big module, register-only (bit8)"
+   },
+   {
+    "id": "0xe3",
+    "flags": "0x0",
+    "src_off": "0x101860",
+    "src_size": "0x1a638",
+    "dst_off": "0x1067c0",
+    "dst_size": "0x811",
+    "init_fn": "0x23d8",
+    "fnptr2": "0x5ad8",
+    "file_off": "0x19ca54"
+   }
   ],
   "cross_check": "entry[0].src_off = 0x178 = 8 + 4*0x5C (table ends exactly after 4 entries); entry[2] end = entry[3].src_off",
-  "blob_state": "all four blobs entropy ~7.95 b/B — still encrypted; stream/AES pipeline is the next M1b item",
-  "device_registry": {"register": "0xf90c", "release": "0xfa20", "scratch": "0x1800 bytes = 256 x 24B records (0x1088 fills)"}
+  "blob_state": "all four blobs entropy ~7.95 b/B \u2014 still encrypted; stream/AES pipeline is the next M1b item",
+  "device_registry": {
+   "register": "0xf90c",
+   "release": "0xfa20",
+   "scratch": "0x1800 bytes = 256 x 24B records (0x1088 fills)"
+  },
+  "per_entry_processing": {
+   "orchestrator": "0x964: flags bit1 -> blob = container+src_off (raw); else FUN_00001088 -> FUN_00000dc8 -> dd70(container+src_off, src_size) = module image; then FUN_00000f0c: if dst_size != 0 -> dd70(container+dst_off, dst_size) = patch container -> FUN_000011b4 merge -> FUN_00003188",
+   "device_register": "0xf90c(scratch, id, blob, size, flags); bit8 (0x100) = register-only (no init-fn call)",
+   "init_calls": "unless bit8: call blob+entry[+0x20](scratch) then blob+entry[+0x1C](obj, id, blob, size, 0, &flag, fn)"
+  },
+  "nested_dd70_container": {
+   "parser": "FUN_0000dd70",
+   "layout": "[3 obf dwords: total_size | count|flags<<8 | key_table_size][key table][align4][count x {u32 chunk_off, chunk_size}][encrypted chunks]",
+   "seed": "((x*x)>>17)^((x*x)<<11) mod 2^32, x = [0x257e8] = 0x14B4 (seed 0x64f480d6)",
+   "key_table_deob": "per dword clmul32(0x94511DD2, w); then per byte i: kt[i] = uxtb(kt[i] + uxtb(((clmul(0x94511DD2, mulA << (i&0x1B)) - (mulB >> (i&0x17))) >> (i&0x1F)))) with mulA=(seed+0xF1CB5B81)*seed, mulB=(seed+0xCE18397E)*seed (all 32-bit)",
+   "key_table_role": "the LZ decode TREE: 3-byte nodes {u16 value (bit15 = leaf), u8 bits}; roots = tree[next 8 bits], leaf roots store the code length, internal roots (bits=8) descend via children at (value&0x7FFF)+bit testing bits 8,9,...",
+   "pair_deob": "w ^= m1 << ((i&3)+3); w = clmul32(0x94511DD2, w); w += m2 >> ((i&7)+5); m1=(seed+0xB31F451C)*seed, m2=(seed+0x30EF5CEF)*seed (32-bit; shifts are COUNTER-based - Ghidra mis-decompiled them as seed-based)",
+   "chunk_pipeline": "eb34(stream,[0x257e8]) -> fc30(CBC, shipped rk, blocks = len>>4 FLOOR: tail bytes stay stream-only) -> scatter {base,count,entries_off,data_off} + n x 16B {dst_off,dst_size,src_size} -> memcpy or tree-LZ",
+   "tree_lz": "FUN_0000f2a4/f9f4: sym&0x300 == 0 literal; 0x100 accumulator (<=2 bytes); 0x200 RLE of last 1/2/4-byte unit x (accum or 1); 0x300 copy lo bytes from distance accum+lo; bit reader f15c/f1b4/f200 = LSB-first, 32-bit peek",
+   "patch_merge": "FUN_000011b4 (0x518-byte table build) + FUN_00003188 (apply) - next M1b item"
+  },
+  "module_results": [
+   {
+    "id": "0x81",
+    "kind": "dd70",
+    "image_size": "0x140d8",
+    "chunks": 5,
+    "entries_ok": 5,
+    "patch": {
+     "size": "0x2b2",
+     "entries_ok": 9
+    },
+    "sha256": "0f021db9cfec9bcb2fd4cfc21da2c68ccbd7ffcdf8780da3189da5d663b703de"
+   },
+   {
+    "id": "0x96",
+    "kind": "dd70",
+    "image_size": "0x2a870",
+    "chunks": 13,
+    "entries_ok": 25,
+    "patch": {
+     "size": "0xe10",
+     "entries_ok": 35
+    },
+    "sha256": "74fba888cc093cc42d476c8976c4e1eababcb6b1ac50b4e1783fe6971e45b9a6",
+    "verified": "blob+0xe678 disassembles as 'adrp x1,..; ldr x0,[x1,#0x204]; mov w0,#1; ret'"
+   },
+   {
+    "id": "0xf3",
+    "kind": "raw-inline",
+    "size": "0xec884",
+    "note": "register-only (flags 0x102: bit1 inline + bit8 no-init): stored as-is, consumed by a later stage",
+    "sha256": "e9a169cd33c622b0b9c82350a64154652b759d31e5ff4b84159b5e87bd343eb6"
+   },
+   {
+    "id": "0xe3",
+    "kind": "dd70",
+    "image_size": "0x1a638",
+    "chunks": 8,
+    "entries_ok": 8,
+    "patch": {
+     "size": "0x811",
+     "entries_ok": 8
+    },
+    "sha256": "d1975382df3deb6871aa111d98ebc5055d0f759482487f3515bc00ee44e6ddde",
+    "verified": "blob+0x23d8 = 'sub sp,sp,#0xa0; stp x19,x30,[sp,#0x10];..' and +0x5ad8 = 'adrp; ldr; mov w0,#1; ret'"
+   }
+  ],
+  "totals": {
+   "module_entries_ok": 38,
+   "module_entries_fail": 0,
+   "patch_entries_ok": 52,
+   "patch_entries_fail": 0
+  }
  },
  "anti_analysis": [
   "no dynamic-linker imports: liblog/libstdc++/libm/libc/libz/libdl resolved by hand-rolled ELF scanner 0x29a0 + private relocation processor 0x5024",

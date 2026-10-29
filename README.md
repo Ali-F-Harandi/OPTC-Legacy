@@ -15,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 25.8% decompiled & rebuilt**
+**Overall — 26.1% decompiled & rebuilt**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  25.8%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  26.1%
 ```
 
 | Module | Progress | Status |
@@ -26,12 +26,12 @@
 | Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
 | Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
-| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨` 95% | M1b hand-off RESOLVED: the stage-2 entry receives a ~1 MB embedded-module container (file 0x9B1EC, exact LOUSER+0 remainder) — head decoder 0x13f0 + entry reader 0x15f4 + orchestrator 0x964 reversed, 4 module entries parsed (ids 0x81/0x96/0xf3/0xe3); clmul deob constant corrected to 0x94511DD2; AES-256 master key + FIPS-197 PASS unchanged; remaining: decrypt the 4 module blobs + data1.dat seed |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨` 97% | ALL 4 embedded module blobs DECRYPTED (90/90 container entries, zero failures): nested dd70 containers reversed — header formulas, key table = flattened Huffman tree (3B nodes), chunk pipeline eb34(stream)->fc30(CBC floor len>>4)->scatter->tree-LZ; ARM64 verified at init-fn offsets (0xe3+0x23d8 prologue, 0x96+0xe678 init stub); two re-impl traps fixed (32-bit truncation before shifts, counter-based pair shifts). tools/stage2_crypto.py --modules. Remaining: 0x11b4/0x3188 patch merge, raw 0xf3 blob (969KB register-only), data1.dat seed |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
 | Engine core — libgame.so | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 4% | section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 26% | .idx chunk format + 7ffe container format reversed (unpack_7ffe.py); embedded-module container parsed end-to-end (4 ARM64 sub-modules, still encrypted); 39.9 MB engine blob + data1.dat still encrypted |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 28% | .idx chunk format + 7ffe container format reversed (unpack_7ffe.py); embedded-module container parsed end-to-end (4 ARM64 sub-modules, still encrypted); 39.9 MB engine blob + data1.dat still encrypted |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |

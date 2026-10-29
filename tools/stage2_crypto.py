@@ -335,6 +335,231 @@ def parse_embedded_container(so_bytes, n_entries=4):
     return head, seed, entries
 
 
+# ---- nested dd70 containers: the module blobs (stream->CBC->tree-LZ) --------
+#
+# Reversal of the per-entry path (FUN_0000dc8 / FUN_00000f0c):
+#   entry (f2, f3) -> dd70(container+f2, f3) = the module image source
+#   entry (f4, f5) -> dd70(container+f4, f5) = a patch container (0x11b4 merge)
+#
+# dd70 container layout (seed = f([0x257e8]^2), deob formulas per dword):
+#   [+0x00] total_size          [+0x04] count | flags<<8     [+0x08] key_table_size
+#   [+0x0C] key table (kts B)   — dword clmul layer, then byte-add layer
+#           == the LZ decode TREE: 3-byte nodes {u16 value|0x8000 leaf flag, u8 bits}
+#   [align4] count pairs {u32 chunk_off, u32 chunk_size}
+#   chunks: eb34(stream) -> fc30(CBC, blocks = len>>4 FLOOR — the tail bytes
+#           stay stream-only) -> scatter header {base, n, entries_off, data_off}
+#           + n x 16B entries {dst_off, dst_size, src_size, pad}
+#           -> per entry: memcpy when sizes match, else the tree-LZ below.
+#
+# Two Python pitfalls hit while re-implementing (both fixed, verified 38/38):
+#   * every (seed + K) * seed product is truncated to 32 bits BEFORE the
+#     shifts — an untruncated Python int leaks high bits into the masks;
+#   * the pairs-deob shifts are counter-based ((i&3)+3, (i&7)+5), NOT
+#     seed-derived — Ghidra confused the registers (ldr x1 then and w1).
+
+def dd70_seed(key=STREAM_KEY):
+    return container_seed(key)
+
+
+def dd70_parse(view, key=STREAM_KEY):
+    """Parse one nested dd70 container view (bytes at container + f2/f4)."""
+    seed = dd70_seed(key)
+    w0, w1, w2 = struct.unpack_from("<3I", view, 0)
+    total = (seed * 0xF87B337C + ((0xA21DFB3A << (seed & 7)) & M32)
+             + clmul32(XOR_CONST, w0)) & M32
+    v1 = (((0x416E2AF2 >> (seed & 0xD)) + seed + 0xBD19C63C) & M32) ^ clmul32(XOR_CONST, w1)
+    count = v1 & 0xFF
+    flags = (v1 >> 8) & 0xFF
+    kts = (((0x643A3A3B << (seed & 0xB)) & M32) - (seed ^ 0x3B2BF538)
+           + clmul32(XOR_CONST, w2)) & M32
+    # key table: dword clmul layer, then unsigned byte-add layer
+    mul_a = (((seed + 0xF1CB5B81) & M32) * seed) & M32
+    mul_b = (((seed + 0xCE18397E) & M32) * seed) & M32
+    kt = bytearray(view[12:12 + kts])
+    for i in range(kts // 4):
+        w = struct.unpack_from("<I", kt, i * 4)[0]
+        struct.pack_into("<I", kt, i * 4, clmul32(XOR_CONST, w))
+    for i in range(kts):
+        t = (mul_a << (i & 0x1B)) & M32
+        t = clmul32(XOR_CONST, t)
+        t = ((t - (mul_b >> (i & 0x17))) & M32) >> (i & 0x1F)
+        kt[i] = (kt[i] + (t & 0xFF)) & 0xFF
+    tree = [struct.unpack_from("<HB", kt, i * 3) for i in range(kts // 3)]
+    # chunk pairs
+    m1 = (((seed + 0xB31F451C) & M32) * seed) & M32
+    m2 = (((seed + 0x30EF5CEF) & M32) * seed) & M32
+    consumed = (12 + kts + 3) & ~3          # FUN_0000d45c(., 4, 1) — align up
+    et = bytearray(view[consumed:consumed + count * 8])
+    for i in range(0, count * 8, 4):
+        w = struct.unpack_from("<I", et, i)[0]
+        w ^= (m1 << ((i & 3) + 3)) & M32
+        w = clmul32(XOR_CONST, w)
+        w = (w + (m2 >> ((i & 7) + 5))) & M32
+        struct.pack_into("<I", et, i, w)
+    pairs = [(struct.unpack_from("<I", et, i * 8)[0],
+              struct.unpack_from("<I", et, i * 8 + 4)[0]) for i in range(count)]
+    return {"total": total, "count": count, "flags": flags, "tree": tree,
+            "pairs": pairs}
+
+
+class TreeBitReader:
+    """FUN_0000f15c/f1b4/f200 — LSB-first bit cursor with a 32-bit peek."""
+
+    def __init__(self, data):
+        self.d = data
+        self.pos = 0
+
+    def peek(self):                                  # FUN_0000f1b4
+        b = self.pos >> 3
+        v = int.from_bytes(self.d[b:b + 4].ljust(4, b"\0"), "little")
+        return v >> (self.pos & 7)
+
+    def consume(self, n):                            # FUN_0000f200
+        self.pos += n
+
+
+def tree_decode_sym(br, tree):
+    """FUN_0000f2a4 — flattened prefix-code walk over the key-table tree.
+
+    Root = tree[next 8 bits]; leaf roots carry the code length in `bits`,
+    internal roots (bits = 8) descend testing successive bits 8, 9, ...
+    with children at (parent.value & 0x7FFF) + bit.
+    """
+    p = br.peek()
+    val, bits = tree[p & 0xFF]
+    if val & 0x8000:
+        br.consume(bits)
+        return val & 0x7FFF
+    k = bits
+    mask = 1 << (k & 0x1F)
+    while True:
+        k += 1
+        idx = (val & 0x7FFF) + (1 if (mask & p) else 0)
+        val, _ = tree[idx]
+        if val & 0x8000:
+            br.consume(k)
+            return val & 0x7FFF
+        mask <<= 1
+
+
+def tree_lz_decompress(src, dst_size, tree):
+    """FUN_0000f9f4 token loop (symbols from tree_decode_sym):
+
+    sym & 0x300 == 0x000  literal byte (accumulator preserved)
+                == 0x100  accumulator = accum ? (accum << 8 | lo) : lo  (<= 2 bytes)
+                == 0x200  RLE: repeat the last 1/2/4-byte unit, `accum or 1`
+                          times; other lo values just skip (zero fill)
+                == 0x300  windowed copy: `lo` bytes from distance accum + lo
+    """
+    br = TreeBitReader(src)
+    out = bytearray()
+    accum = 0
+    while len(out) < dst_size:
+        sym = tree_decode_sym(br, tree)
+        lo = sym & 0xFF
+        kind = sym & 0x300
+        if kind == 0x000:
+            out.append(lo)
+        elif kind == 0x100:
+            if accum > 0xFF:
+                return None
+            accum = (accum << 8 | lo) if accum else lo
+        elif kind == 0x200:
+            n_units = accum if accum else 1
+            accum = 0
+            total = lo * n_units
+            if len(out) + total > dst_size:
+                return None
+            if lo == 1:
+                out += bytes([out[-1] if out else 0]) * n_units
+            elif lo == 2:
+                if len(out) < 2:
+                    return None
+                out += bytes(out[-2:]) * n_units
+            elif lo == 4:
+                if len(out) < 4:
+                    return None
+                out += bytes(out[-4:]) * n_units
+            else:
+                out += b"\0" * total
+        else:
+            disp = accum + lo
+            accum = 0
+            if disp > len(out) or len(out) + lo > dst_size:
+                return None
+            for _ in range(lo):
+                out.append(out[-disp])
+    if not (len(src) * 8 - 8 < br.pos <= len(src) * 8):
+        return None
+    return bytes(out)
+
+
+def dd70_extract(view, m, stage2_tabs, stage2_rk, key=STREAM_KEY):
+    """Decrypt + assemble one dd70 container image. Returns (image, stats)."""
+    img = bytearray(m["total"])
+    entries_ok = entries_fail = 0
+    for (off, size) in m["pairs"]:
+        chunk = bytes(view[off:off + size])
+        chunk = stream_decrypt(chunk, key)
+        if m["flags"] != 1:
+            chunk = cbc_decrypt(chunk, stage2_rk, stage2_tabs)   # floor(len/16)
+        base, n, eoff, doff = struct.unpack_from("<4I", chunk, 0)
+        cursor = 0
+        for i in range(n):
+            d, dsz, ssz, _ = struct.unpack_from("<4I", chunk, eoff + i * 0x10)
+            src = chunk[doff + cursor:doff + cursor + ssz]
+            if dsz == ssz:
+                img[base + d:base + d + dsz] = src[:dsz]
+                entries_ok += 1
+            else:
+                res = tree_lz_decompress(src, dsz, m["tree"])
+                if res is None:
+                    entries_fail += 1
+                else:
+                    img[base + d:base + d + dsz] = res
+                    entries_ok += 1
+            cursor += ssz
+    return bytes(img), (entries_ok, entries_fail)
+
+
+def extract_modules(so_bytes, blob, out_dir=None):
+    """Decrypt all four embedded module blobs. Returns a result list."""
+    import os
+    tabs = load_tables(blob)
+    rk = list(struct.unpack_from("<60I", blob, OFF_RK))
+    cont = so_bytes[CONTAINER_OFF:]
+    head, seed, entries = parse_embedded_container(so_bytes)
+    results = []
+    for e in entries:
+        f = e
+        rec = {"id": f["id"], "flags": f["flags"]}
+        if f["flags"] & 2:      # bit1: raw inline blob (register-only)
+            rec["kind"] = "raw"
+            rec["image"] = bytes(cont[f["src_off"]:f["src_off"] + f["src_size"]])
+        else:
+            rec["kind"] = "dd70"
+            m = dd70_parse(cont[f["src_off"]:])
+            img, (ok, fail) = dd70_extract(cont[f["src_off"]:], m, tabs, rk)
+            rec["image"] = img
+            rec["total"] = m["total"]
+            rec["chunks"] = m["count"]
+            rec["entries_ok"] = ok
+            rec["entries_fail"] = fail
+            if f["dst_size"]:
+                pm = dd70_parse(cont[f["dst_off"]:])
+                pimg, (pok, pfail) = dd70_extract(cont[f["dst_off"]:], pm, tabs, rk)
+                rec["patch_total"] = pm["total"]
+                rec["patch_entries_ok"] = pok
+                rec["patch_entries_fail"] = pfail
+                rec["patch_image"] = pimg
+        results.append(rec)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+            with open(f"{out_dir}/module_{f['id']:#04x}.bin", "wb") as fh:
+                fh.write(rec["image"])
+    return results
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     blob_path = args[0] if args else None
@@ -362,6 +587,34 @@ def main():
                   f"(file {blob_lo:#x})")
         print("[!] blobs are high-entropy (7.95 b/B) — stream/AES pipeline is the")
         print("    next M1b item.")
+        return
+
+    # full module-blob decryption (input = the .so; --payload = stage-2 image)
+    if "--modules" in sys.argv:
+        if "--payload" not in sys.argv:
+            print("[!] --modules needs --payload <7ffe-payload.dec> "
+                  "[--out <dir>]")
+            sys.exit(1)
+        so = open(blob_path, "rb").read()
+        blob = open(sys.argv[sys.argv.index("--payload") + 1], "rb").read()
+        out_dir = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else None
+        results = extract_modules(so, blob, out_dir)
+        for r in results:
+            if r["kind"] == "raw":
+                print(f"[*] module id={r['id']:#04x}: RAW inline blob, "
+                      f"{len(r['image']):#x} B (register-only)")
+                if out_dir:
+                    print(f"    -> {out_dir}/module_{r['id']:#04x}.bin")
+            else:
+                line = (f"[*] module id={r['id']:#04x}: dd70 image "
+                        f"{r['total']:#x} B, {r['chunks']} chunks, "
+                        f"entries ok={r['entries_ok']} fail={r['entries_fail']}")
+                if "patch_total" in r:
+                    line += (f"; patch {r['patch_total']:#x} B "
+                             f"ok={r['patch_entries_ok']} fail={r['patch_entries_fail']}")
+                print(line)
+                if out_dir:
+                    print(f"    -> {out_dir}/module_{r['id']:#04x}.bin")
         return
 
     blob = open(blob_path, "rb").read()

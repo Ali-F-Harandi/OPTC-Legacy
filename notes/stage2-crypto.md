@@ -1,11 +1,13 @@
 # Stage-2 Protector — Crypto Architecture (M1b)
 
-> Status: **crypto core + embedded-module container reversed & verified**
-> (AES-256 master key recovered, FIPS-197 passes, the ~1 MB container after
-> the stage-2 blob parses end-to-end). Remaining: decrypt the four embedded
-> module blobs (stream/AES pipeline), and the separate `data1.dat` seed
-> (§7.6). Pseudocode: `decomp/native-loader-7ffe-stage2/` (269 auto + 67
-> forced functions). Tooling: `tools/stage2_crypto.py`.
+> Status: **all four embedded module blobs decrypted** (90/90 container
+> entries decode cleanly, ARM64 verified at the entry init-fn offsets).
+> The AES-256 master key is recovered, FIPS-197 passes, and the
+> stream→CBC→tree-LZ pipeline is fully re-implemented in
+> `tools/stage2_crypto.py --modules`. Remaining: the 0x11b4/0x3188 patch
+> merge, the raw 969 KB register-only blob (id 0xf3), and the separate
+> `data1.dat` seed (§7.6). Pseudocode:
+> `decomp/native-loader-7ffe-stage2/` (269 auto + 67 forced functions).
 
 ## 1. Target
 
@@ -245,7 +247,94 @@ a different seed than the static `[0x257e8] = 0x14B4`. Its 4-byte head
 (`0x3ecbf1da` LE) is a candidate seed source — next M1b item, now unblocked
 by the clmul-constant fix.
 
-## 8. Reproduce
+## 8. The four module blobs — decrypted (stream→CBC→tree-LZ)
+
+The per-entry processing hidden behind the orchestrator (all reversed this
+pass): entries **without** flag bit1 do not point at raw code — their
+`(src_off, src_size)` range is a **nested dd70 container**, and
+`(dst_off, dst_size)` a second one (a patch source):
+
+```
+0x964  flags bit1? -> blob = container+src_off (raw, register-only)
+       else FUN_00001088 -> FUN_00000dc8 -> dd70(container+src_off, src_size)
+                             -> module image (malloc(total_size))
+       FUN_00000f0c: if dst_size -> dd70(container+dst_off, dst_size)
+                             -> patch image -> 0x11b4 merge -> 0x3188 apply
+       0xf90c register device (id, blob, size); unless bit8: call
+             blob+entry[+0x20](scratch) then blob+entry[+0x1C](obj,...)
+```
+
+### 8.1 The nested dd70 container
+
+```
+[3 obfuscated dwords]  total_size | count | flags<<8 | key_table_size
+[key_table_size B]     the LZ decode TREE (two deob layers, §8.2)
+[align4][count pairs]  {u32 chunk_off, u32 chunk_size} (obfuscated)
+[chunks]               per chunk: stream -> CBC -> scatter -> LZ/copy
+```
+
+Header formulas = the §7 formulas with seed `f([0x257e8]²)` = `0x64f480d6`.
+`total_size` is the **output image size** (it equals the outer entry's
+src_size field), count ≤ 0x100 chunks.
+
+### 8.2 The key table IS the Huffman tree
+
+After the dword-`clmul` layer and the byte-add layer, the key table is a
+flat array of 3-byte nodes `{u16 value; u8 bits}` (bit 15 of value = leaf
+flag). Decoding (FUN_0000f2a4, bit reader f15c/f1b4/f200 = LSB-first,
+32-bit peek): `root = tree[next 8 bits]`; a leaf root's `bits` is the code
+length (3–8 bits); internal roots (bits = 8) descend by testing bits 8, 9,
+… with children at `(value & 0x7FFF) + bit`. Symbols are 15-bit.
+
+### 8.3 Chunk pipeline and scatter format
+
+Each chunk: `eb34` stream-decrypt (key `[0x257e8]` = 0x14B4), then `fc30`
+AES-256-CBC with the shipped schedule — **block count = len >> 4 (FLOOR)**:
+the trailing `len % 16` bytes are never CBC-processed (the `+0x10` malloc
+slack is defensive, not padding). The plaintext is a scatter block:
+
+```
+{u32 base; u32 n; u32 entries_off; u32 data_off}
+n x 16B {u32 dst_off; u32 dst_size; u32 src_size; u32 pad}
+data at data_off: packed src_size chunks
+```
+
+`FUN_0000ecd8` walks entries with a running cursor (advancing by src_size)
+and `FUN_0000ee70` dispatches: `src_size == dst_size` → memcpy, else the
+tree-LZ (FUN_0000f9f4): `sym&0x300` selects literal / 2-byte accumulator /
+RLE-of-last-1|2|4-byte-unit × (accum or 1) / windowed copy of `lo` bytes
+from distance `accum + lo`.
+
+### 8.4 Two re-implementation traps (both cost a debugging round)
+
+- **32-bit truncation before shifts**: every `(seed + K) * seed` product
+  must be cut to 32 bits *before* the `<<`/`>>`. Python keeps the full
+  64-bit product, so `((seed+K)*seed) >> 5` leaks product bits ≥ 32 into
+  the mask — the decode still *looks* plausible (16 low bits right) but
+  the high bits are garbage.
+- **Counter-based shifts, seed-based constants**: the pairs-deob shifts
+  are `((i&3)+3)` and `((i&7)+5)` — Ghidra mis-decompiled them as
+  seed-derived because `ldr x1` (counter) is followed by `and w1` (the
+  same register's low half). Verified against the raw assembly and then
+  empirically (chunk offsets tile the container exactly).
+
+### 8.5 Results (90/90 entries, zero failures)
+
+| id | kind | image | chunks | entries | patch |
+|----|------|-------|--------|---------|-------|
+| 0x81 | dd70 | 0x140d8 B | 5 | 5/5 | 0x2b2 B, 9/9 |
+| 0x96 | dd70 | 0x2a870 B | 13 | 25/25 | 0xe10 B, 35/35 |
+| 0xf3 | raw inline | 0xec884 B | — | register-only | — |
+| 0xe3 | dd70 | 0x1a638 B | 8 | 8/8 | 0x811 B, 8/8 |
+
+ARM64 verified: `0xe3+0x23d8` = `sub sp, sp, #0xa0; stp x19, x30, …`
+(classic prologue), `0xe3+0x5ad8` and `0x96+0xe678` = `adrp x1, …; ldr
+x0, [x1, #…]; mov w0, #1; ret` (init stubs). The images have zero gaps
+where the patch containers plug in — that merge (`0x11b4` builds a
+0x518-byte table, `0x3188` applies it) is the next M1b item, as is the
+still-encrypted 969 KB raw blob (id 0xf3, consumed by a later stage).
+
+## 9. Reproduce
 
 ```bash
 python3 tools/unpack_7ffe.py lib__7ffe__.so out/        # M1  → payload
@@ -253,6 +342,9 @@ python3 tools/stage2_crypto.py out/7ffe-payload.dec --fips
 # → schedule match 60/60, master key, FIPS PASS
 python3 tools/stage2_crypto.py lib__7ffe__.so --container
 # → embedded module container: head, seed, 4 entries with blob ranges
+python3 tools/stage2_crypto.py lib__7ffe__.so --modules \
+    --payload out/7ffe-payload.dec --out out/modules
+# → 4 decrypted module images (90/90 entries, ARM64-verified init fns)
 ```
 
 Evidence: `evidence/stage2-crypto.json`.
