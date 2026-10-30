@@ -18,28 +18,28 @@
   },
   {
    "id": "platform-shell",
-   "name": "Platform shell — Bisque Java layer",
+   "name": "Platform shell \u2014 Bisque Java layer",
    "done": 7,
    "weight": 8,
    "note": "9 of 187 jp.co.drecom.bisque classes deep-documented (JADX)"
   },
   {
    "id": "loader-7ffe",
-   "name": "Anti-tamper loader — lib__7ffe__.so",
+   "name": "Anti-tamper loader \u2014 lib__7ffe__.so",
    "done": 100,
    "weight": 4,
-   "note": "M3 DONE: 0x9d (the last encrypted module) DECRYPTED via its runtime consumer 0x9b (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C) — 71.6MB restored game code (12998 chunks, 0 fail) + 6.9MB patch. All 57 modules + 0x9d now fully decrypted."
+   "note": "M3 DONE: 0x9d (the last encrypted module) DECRYPTED via its runtime consumer 0x9b (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C) \u2014 71.6MB restored game code (12998 chunks, 0 fail) + 6.9MB patch. All 57 modules + 0x9d now fully decrypted."
   },
   {
    "id": "signer",
-   "name": "API signer — libsigner.so",
+   "name": "API signer \u2014 libsigner.so",
    "done": 85,
    "weight": 3,
    "note": "519 functions pseudocoded; request-signing scheme reconstructed"
   },
   {
    "id": "engine-core",
-   "name": "Engine core — libgame.so",
+   "name": "Engine core \u2014 libgame.so",
    "done": 70,
    "weight": 20,
    "note": "0x9d engine code restored+relocated; GNP/cache/NTY cluster fully decompiled (55 fns); sinatra cipher family emulated; parse_NTY runs under Unicorn"
@@ -61,9 +61,9 @@
   {
    "id": "asset-formats",
    "name": "Asset formats & pipelines",
-   "done": 85,
+   "done": 90,
    "weight": 12,
-   "note": "NTY container format decoded from emulation ground truth (MM magic, volume entries, gzip flag); encrypted-NTY key-record mechanism reversed; cache write path (decryptWriteCache) mapped end-to-end"
+   "note": "NTY container decoded (MM magic, volume entries, gzip flag); encrypted-NTY key-record mechanism reversed; cache write path mapped end-to-end; M4 runtime-capture toolchain (Frida hook + offline decryptor/extractor) built and round-trip verified \u2014 awaiting the on-device 32-byte signature"
   },
   {
    "id": "build-android",
@@ -84,7 +84,7 @@
    "name": "Desktop build (SDL2)",
    "done": 30,
    "weight": 5,
-   "note": "null/SDL2 backends compile clean on Linux — smoke-tested"
+   "note": "null/SDL2 backends compile clean on Linux \u2014 smoke-tested"
   },
   {
    "id": "tooling",
@@ -103,21 +103,21 @@
  ],
  "unit_grids": [
   {
-   "label": "Platform shell — jp.co.drecom.bisque (1 cell = 1 class)",
+   "label": "Platform shell \u2014 jp.co.drecom.bisque (1 cell = 1 class)",
    "total": 187,
    "done": 9,
    "in_progress": 4,
    "per_row": 25
   },
   {
-   "label": "Loader — lib__7ffe__.so (1 cell = 5 functions, 277 total)",
+   "label": "Loader \u2014 lib__7ffe__.so (1 cell = 5 functions, 277 total)",
    "total": 56,
    "done": 49,
    "in_progress": 3,
    "per_row": 28
   },
   {
-   "label": "API signer — libsigner.so (1 cell = 20 functions, 519 total)",
+   "label": "API signer \u2014 libsigner.so (1 cell = 20 functions, 519 total)",
    "total": 26,
    "done": 22,
    "in_progress": 2,
@@ -131,28 +131,28 @@
    "per_row": 27
   },
   {
-   "label": "Game-side stage-2 system — libgame.so LOUSER payload (1 cell = 10%)",
+   "label": "Game-side stage-2 system \u2014 libgame.so LOUSER payload (1 cell = 10%)",
    "total": 10,
    "done": 7,
    "in_progress": 1,
    "per_row": 10
   },
   {
-   "label": "Game-side driver modules — 0x81·0x8f·0x96·0x9b pseudocode (1 cell = 20 functions, 484 total)",
+   "label": "Game-side driver modules \u2014 0x81\u00b70x8f\u00b70x96\u00b70x9b pseudocode (1 cell = 20 functions, 484 total)",
    "total": 25,
    "done": 24,
    "in_progress": 1,
    "per_row": 25
   },
   {
-   "label": "Engine PLT + sinatra cipher — 44,567 stubs resolved, cipher family reversed (1 cell = 10%)",
+   "label": "Engine PLT + sinatra cipher \u2014 44,567 stubs resolved, cipher family reversed (1 cell = 10%)",
    "total": 10,
    "done": 8,
    "in_progress": 1,
    "per_row": 10
   },
   {
-   "label": "M3c consumer chain — factory + 3 emulated cores + NTY format + key provenance + cache scheme (1 cell = 10%)",
+   "label": "M3c consumer chain \u2014 factory + 3 emulated cores + NTY format + key provenance + cache scheme (1 cell = 10%)",
    "total": 10,
    "done": 9,
    "in_progress": 1,
@@ -170,7 +170,7 @@
   },
   {
    "id": "M1",
-   "name": "7ffe loader defeat — stage-1 cipher + stage-2 decrypt",
+   "name": "7ffe loader defeat \u2014 stage-1 cipher + stage-2 decrypt",
    "done": 100,
    "evidence": "evidence/7ffe-unpack-report.json",
    "notes": "notes/7ffe-loader.md",
@@ -178,7 +178,7 @@
   },
   {
    "id": "M1b",
-   "name": "Stage-2 crypto core — AES-256 master key + 4 embedded modules",
+   "name": "Stage-2 crypto core \u2014 AES-256 master key + 4 embedded modules",
    "done": 100,
    "evidence": "evidence/e0_0x81_merge.json",
    "notes": "notes/stage2-crypto.md",
@@ -186,7 +186,7 @@
   },
   {
    "id": "M2",
-   "name": "Game-side consumer — twin stage-2 system in libgame.so LOUSER+0",
+   "name": "Game-side consumer \u2014 twin stage-2 system in libgame.so LOUSER+0",
    "done": 100,
    "evidence": "evidence/m2-game-consumer.json",
    "notes": "notes/m2-game-consumer.md",
@@ -194,7 +194,7 @@
   },
   {
    "id": "M2b",
-   "name": "data1.dat cryptanalysis — 2^32 sweep, 16-bit-granular cipher isolated",
+   "name": "data1.dat cryptanalysis \u2014 2^32 sweep, 16-bit-granular cipher isolated",
    "done": 100,
    "evidence": "evidence/m2b-x-sweep.json",
    "notes": "notes/m2-game-consumer.md",
@@ -202,7 +202,7 @@
   },
   {
    "id": "M2c",
-   "name": "38.5MB game blob — 7-level matryoshka chain, 57 modules",
+   "name": "38.5MB game blob \u2014 7-level matryoshka chain, 57 modules",
    "done": 100,
    "evidence": "evidence/m2c-f3-chain.json",
    "notes": "notes/m2-game-consumer.md",
@@ -226,7 +226,7 @@
   },
   {
    "id": "M3c",
-   "name": "Consumer chain end-to-end — factory, emulated ciphers, key provenance, cache scheme",
+   "name": "Consumer chain end-to-end \u2014 factory, emulated ciphers, key provenance, cache scheme",
    "done": 100,
    "evidence": "evidence/m3c-consumer-chain.json",
    "notes": "notes/m3c-consumer-chain.md",
@@ -238,7 +238,17 @@
    "status": "done",
    "percent": 100,
    "summary": "Full workspace rebuilt from a verified uptodown XAPK (all sha256 match); 55-function Ghidra decompile of the GNP/cache cluster; NTY format ground truth via Unicorn parse emulation (MM magic, 21 RES.DAT.00 volumes); decryptWriteCache 0x1f1c914 = the real decoder (class-bit decoders + gzip path); encrypted-NTY key-record mechanism (sigInstall 0x39dea94: 36-byte signature doubles as the 32-byte RC4-255 key, mode 0x40000000, crc-verified re-parse); M3c oracle bug found and fixed (it rejected the true 'MM' magic); 4 new key candidates discovered; corrected sweeps still negative => the data1.dat key is a runtime APU-table signature (capture point documented)"
+  },
+  {
+   "id": "M4",
+   "title": "Runtime key-capture toolchain (Frida) + completed offline data1.dat pipeline",
+   "status": "done",
+   "percent": 100,
+   "evidence": "evidence/m4-toolchain.json",
+   "notes": "notes/m4-runtime-keydump.md",
+   "tools": "tools/m4_frida_keydump.js + m4_frida_run.py + m4_decrypt_data1.py + m4_extract.py + m4_selftest.py (m3d_emu_nty_full.py +--json)",
+   "summary": "Complete on-device -> offline toolchain for the data1.dat 32-byte signature: Frida agent resolves the libgame.so base + live 0x9d overlay (module offsets == libgame.so VAs, no signature scan) and hooks keyExpansion 0x39d39f4 / full builder 0x39d3a30 / sigInstall 0x39dea94 / NtyReader::open 0x39dda24, dumping keys + sig records + open paths + the sinatra tables (T1..T4@0x14f7375.., rounds@0x1464760) + optional strings-region/full-image dumps. Offline: m4_decrypt_data1.py reproduces sigInstall (custom-seed RC4-255 KSA, period-255 PRGA, crc32, corrected MM oracle, --sweep incl. the embedded-record hypothesis the M3d matrix never tried); existing m3d_emu_nty_full.py gained --json; m4_extract.py extracts volumes (raw + gzip + RC4-255). Synthetic round-trip selftest ALL PASS (MM/crc/byte-exact roundtrip/negative control/period-255). XAPK re-acquisition blocked (uptodown Turnstile / CF mirrors) \u2014 the agent's table+image dumps close that gap."
   }
  ],
- "overall_percent": 48.8
+ "overall_percent": 49.5
 }

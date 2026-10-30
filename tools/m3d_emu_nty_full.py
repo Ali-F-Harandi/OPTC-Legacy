@@ -4,7 +4,9 @@
 All import GOT slots that are zero in the static image get magic trampolines:
 common libc functions are implemented in Python; the rest return 0 (logged).
 Usage: python3 m3d8_emu_full.py <file> [more files...]
+       python3 m3d8_emu_full.py --json out.json <file>   (M4: volume table dump)
 """
+import json
 import struct
 import sys
 
@@ -190,27 +192,38 @@ def hook_expand(uc_, addr, size, user):
 uc.hook_add(UC_HOOK_CODE, hook_expand, begin=0x39d39f4, end=0x39d39f4 + 4)
 
 
+JSON_ENTRIES = []
+JSON_META = {}
+JSON_FILES = []
+
+
 def dump_entry(node, label=""):
     ent = bytes(uc.mem_read(node, 0x2b0))
     print(f"  entry{label} @{node:#x}: vt={struct.unpack_from('<Q', ent, 0)[0]:#x}")
+    row = {"node": node}
     for off, nm in ((0x208, "min?"), (0x20c, "max?"), (0x250, "name-ptr"),
                     (0x25c, "flags"), (0x260, "class-bits"), (0x264, "idx"),
                     (0x268, "offset"), (0x26c, "size"), (0x270, "mode"),
                     (0x274, "field274"), (0x288, "field288")):
         v = struct.unpack_from("<Q", ent, off)[0]
+        row[nm] = v
         extra = ""
         if off == 0x250 and 0 < v < 0x446FCC8:
             try:
                 extra = " " + repr(rd_cstr(v))
+                row["name"] = rd_cstr(v).decode("utf-8", "replace")
             except Exception:
                 pass
         print(f"    +{off:#05x} ({nm:10s}) = {v:#x}{extra}")
+    JSON_ENTRIES.append(row)
     return ent
 
 
 def run(path, label):
     FS.reset(open(path, "rb").read())
     print(f"\n===== {label} ({len(FS.data)} B) =====")
+    JSON_ENTRIES.clear()
+    JSON_META["file"] = path
     ctx = E.HEAP + 0x900000
     uc.mem_write(ctx, b"\x00" * 0x4F8)
     E.call(0x1ef48b8, [ctx])
@@ -246,7 +259,18 @@ def run(path, label):
 
 
 if __name__ == "__main__":
-    for i, p in enumerate(sys.argv[1:]):
+    args = [a for a in sys.argv[1:]]
+    json_path = None
+    if "--json" in args:
+        i = args.index("--json")
+        json_path = args[i + 1]
+        del args[i:i + 2]
+    for i, p in enumerate(args):
         run(p, p.split("/")[-1])
         KEYLOG.clear()
         CALLLOG.clear()
+        if json_path:
+            JSON_FILES.append({"file": JSON_META["file"], "volumes": list(JSON_ENTRIES)})
+    if json_path:
+        json.dump(JSON_FILES, open(json_path, "w"), indent=1)
+        print(f"\n[*] volume table JSON -> {json_path}")

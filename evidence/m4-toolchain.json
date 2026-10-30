@@ -1,0 +1,53 @@
+{
+ "milestone": "M4",
+ "subject": "runtime key-capture toolchain (Frida) + completed offline data1.dat decryption pipeline",
+ "status": "toolchain complete and round-trip verified; awaiting the on-device key dump",
+ "capture_points": {
+  "keyExpansion": "0x39d39f4 (out, key, keylen, mode) — PRIMARY; data1.dat arrives as keylen=0x20 mode=0x40000000",
+  "keyExpansionFull": "0x39d3a30 (out, key, keylen, rounds, mode) — backup; dispatcher tail-jumps via PLT 0x3fa2710 so LR is unchanged (dedup by key|mode)",
+  "sigInstall": "0x39dea94 (ctx, record) — record {u32 id, sig[0x24]@+4, u32 len@+0x28, u32 crc32@+0x2c, u32 @+0x30, payload@+0x34}; sig[0:32] IS the RC4-255 key",
+  "ntyOpen": "0x39dda24 (this, path, record) — correlates records with files"
+ },
+ "addressing": "module 0x9d offsets == libgame.so VAs (notes/m3-9d-restore.md); runtime = Module.getBaseAddress('libgame.so') + OFFSET; overlay-install detected by polling base+0x39d39f4 for non-zero (shipped .so is blanked)",
+ "tables_dumped_by_agent": {
+  "T1": "0x14f7375 (RC4-255 KSA seed permutation)",
+  "T2": "0x14f7475", "T3": "0x14f7575", "T4": "0x14f7675",
+  "rounds": "0x1464760 (24 B)",
+  "strings_region": "[0x1400000, 0x1500000) — volume-name resolution",
+  "full_image": "optional [0, 0x446fcc8)"
+ },
+ "tools": [
+  "tools/m4_frida_keydump.js",
+  "tools/m4_frida_run.py",
+  "tools/m4_decrypt_data1.py",
+  "tools/m4_extract.py",
+  "tools/m4_selftest.py",
+  "tools/m3d_emu_nty_full.py (+ --json, otherwise unchanged)"
+ ],
+ "selftest": {
+  "method": "synthetic encrypted NTY built exactly per sigInstall semantics (seeded random T1 permutation, random 36-byte signature, crc32 over plaintext), then recovered offline",
+  "results": [
+   "PASS explicit-key decrypt: MM=4d4d crc=True roundtrip=True",
+   "PASS sweep mode finds embedded-record key",
+   "PASS wrong-key negative control (exit 2)",
+   "PASS keystream period is exactly 255"
+  ],
+  "extractor_check": "synthetic 3-volume NTY (png blob, gzip-wrapped blob, raw blob): raw + inflate + manifest all PASS",
+  "note": "the selftest T1 is a random permutation stand-in; the REAL T1 comes from the device dump (or merged.bin[0x14f7375:0x14f7475])"
+ },
+ "untested_static_hypothesis_covered": {
+  "fact": "m3d9_matrix_mm.py tested only fixed string keys — never the file head as a key record",
+  "data1_head32": "daf1cb3ed184ea5595ead4037df4f90701a4506cc0280014214700a2084effe0",
+  "coverage": "m4_decrypt_data1.py --sweep tries data1[4:36] (embedded record sig[0:32]), sig36, head[0:32], head id x offsets {0x34,4,0} with the corrected MM oracle; runs by default when no key is supplied"
+ },
+ "artifact_status": {
+  "xapk": "NOT re-acquired this session — uptodown now gates downloads behind Cloudflare Turnstile (headless and Xvfb-headed Chromium fail: the widget never emits a token); apkpure/apkmirror/apkfab CF-challenged or IP-blocked; no other mirror has 16.2.1 (released 2026-10-29)",
+  "workaround": "the Frida agent dumps T1..T4 + strings region + optional full image from the device, making the offline pipeline independent of the XAPK; the M3d reproduce chain still works where the XAPK exists (Telegram source / user copy)"
+ },
+ "next": [
+  "run tools/m4_frida_run.py on device, play to title screen, capture the keylen=32 mode=0x40000000 key",
+  "m4_decrypt_data1.py --keydump optc_dump/keydump.json --t1 optc_dump/T1.bin --data1 data1.dat",
+  "m3d_emu_nty_full.py --json volumes.json data1.dec.nty  (existing harness)",
+  "m4_extract.py --nty data1.dec.nty --volumes volumes.json"
+ ]
+}

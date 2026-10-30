@@ -187,9 +187,25 @@ The protection stack has been fully unwrapped, milestone by milestone:
   (`keyExpansion 0x39d39f4`) is documented
   ([`notes/m3d-cache-decoder.md`](notes/m3d-cache-decoder.md)).
 
-What remains is the fun part: one 32-byte runtime signature (a single
-Frida hook away), then the full offline decrypt — and the actual
-clean-room rebuild.
+- **M4 — the capture toolchain, armed and round-trip proven.** The
+  on-device → offline pipeline is built and verified: a Frida agent that
+  resolves `libgame.so` base + the live 0x9d overlay (no signature scan —
+  module offsets ARE libgame.so VAs) and hooks all four capture points
+  (`keyExpansion 0x39d39f4`, the full builder, `sigInstall 0x39dea94`,
+  `NtyReader::open`), dumping keys, sig records, open paths and the
+  sinatra crypto tables (T1..T4, rounds) — plus an optional full
+  71.6 MB runtime image. Offline, `m4_decrypt_data1.py` reproduces
+  sigInstall with the M3c-verified RC4-255 core (crc32 + corrected-MM
+  oracle + `--sweep` covering the embedded-record hypothesis the M3d
+  matrix never tried), the existing `m3d_emu_nty_full.py` harness gained
+  a `--json` volume-table output, and `m4_extract.py` turns the
+  decrypted NTY into files. A synthetic round-trip selftest proves the
+  whole offline path byte-exact
+  ([`notes/m4-runtime-keydump.md`](notes/m4-runtime-keydump.md)).
+
+What remains is the fun part: one 32-byte runtime signature (now a
+single command away — `tools/m4_frida_run.py`), then the full offline
+decrypt — and the actual clean-room rebuild.
 
 ## Target facts (measured, not guessed)
 
@@ -347,9 +363,11 @@ Reproduce the full unpack with `tools/extract_apkm.sh` and
 | **M3b — PLT + RTTI + sinatra cipher** | ✅ | PLT 100 % resolved statically (44,567 stubs from the shipped .so — the 0x9d image is an overlay); RTTI chain = ground truth (0x9e DB addresses proven mis-mapped); **sinatra cipher family reversed**: custom-seeded RC4 + custom-AES-192-shaped key schedule; embedded 24-B keys + server-issued `bq159_key` flow documented — [`notes/m3b-plt-rtti-cipher.md`](notes/m3b-plt-rtti-cipher.md) |
 | **M3c — consumer chain end-to-end** | ✅ | decoder factory + volume-entry format; all 3 cipher cores **Unicorn-emulated** (custom-AES-192 `0x39d3300`, CAST-128-style `0x39d4508`, RC4 `0x39d3800` with **255-B periodic reload** — M3b's sentinel semantics corrected); key expansion + default-key provenance ('16.2.1' descriptor → key[0] → globals); NTY header format + volume acquisition; **GlobalNtyPool local-cache path scheme** (`root/%02X/name@version`); data1.dat key proven NOT static (55,520 rodata strings swept, 0 hits) — [`notes/m3c-consumer-chain.md`](notes/m3c-consumer-chain.md) |
 | **M3d — the cache write path** | ✅ | **the REAL data1.dat decoder chain reversed end-to-end**: decryptWriteCache `0x1f1c914` (8 KB decrypt→cache-write loop + GzStreamInflater path for gzip volumes); **NTY format ground truth** via full Unicorn emulation of parse_NTY on the plaintext RES.DAT.00 ('MM' magic, 21 named volumes, entry fields incl. flags/class-bits/stamps); **encrypted-NTY key-record mechanism** (sigInstall `0x39dea94`: a 36-byte record signature doubles as the 32-byte RC4-255 key, mode 0x40000000, crc-verified re-parse); **M3c oracle bug found & fixed** (it rejected the true 'MM' magic — every earlier sweep tested an impossible condition); 4 new key candidates + corrected sweeps (134K strings × cores) still negative ⇒ the data1.dat key is a runtime APU-table signature (exact Frida capture point documented); full workspace rebuilt from a sha-verified XAPK — [`notes/m3d-cache-decoder.md`](notes/m3d-cache-decoder.md) |
-| **M4 — JNI table** | ⬜ | walk the hidden module system's Java-facing API surface |
-| **M5 — renderer** | ⬜ | GLES2 scene graph reimplementation (biggest module) |
-| **M6 — gameplay** | ⬜ | battle system, then everything else, block by block |
+| **M4 — runtime key capture** | ✅ | **the complete on-device → offline toolchain, round-trip verified**: Frida agent (`m4_frida_keydump.js` + runner) resolving the libgame.so base + live 0x9d overlay, hooking keyExpansion `0x39d39f4` / the full builder / sigInstall `0x39dea94` / NtyReader::open, dumping keys + sig records + open paths + the sinatra tables (T1..T4, rounds) + optional full 71.6 MB image; offline `m4_decrypt_data1.py` (sigInstall semantics, RC4-255, crc32 + corrected-MM oracle, `--sweep` incl. the never-tried embedded-record hypothesis), `m3d_emu_nty_full.py --json` (existing harness, volume table), `m4_extract.py` (raw + gzip + RC4-255 volumes, manifest); synthetic selftest ALL PASS (MM / crc / byte-exact roundtrip / negative control / period-255) — [`notes/m4-runtime-keydump.md`](notes/m4-runtime-keydump.md) |
+| **M4b — on-device capture run** | ⬜ | run the hook on a rooted device, bind each 32-byte signature to its volume via the open-path correlation, decrypt data1.dat end-to-end, same for the .01 block-cipher family |
+| **M5 — JNI table** | ⬜ | walk the hidden module system's Java-facing API surface |
+| **M6 — renderer** | ⬜ | GLES2 scene graph reimplementation (biggest module) |
+| **M7 — gameplay** | ⬜ | battle system, then everything else, block by block |
 
 ## Legal
 
