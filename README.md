@@ -5,7 +5,7 @@
 [![build](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/build.yml/badge.svg)](../../actions)
 [![deploy-web](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/deploy-pages.yml/badge.svg)](../../actions/workflows/deploy-pages.yml)
 [![play](https://img.shields.io/badge/play-web%20build%20%28WASM%29-6ea8ff?logo=githubpages&logoColor=white)](https://ali-f-harandi.github.io/OPTC-Legacy/)
-[![progress](https://img.shields.io/badge/decompilation-46.2%25-blue)](PROGRESS.json)
+[![progress](https://img.shields.io/badge/decompilation-48.2%25-blue)](PROGRESS.json)
 [![target](https://img.shields.io/badge/target-16.2.1%20%221621%22-critical)](hashes.txt)
 [![license](https://img.shields.io/badge/legal-clean--room%20RE-important)](#legal)
 
@@ -15,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 46.2% decompiled & rebuilt**
+**Overall — 48.2% decompiled & rebuilt**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░  46.2%
+███████████████████░░░░░░░░░░░░░░░░░░░░░  48.2%
 ```
 
 | Module | Progress | Status |
@@ -28,15 +28,15 @@
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
 | Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | M3 DONE: 0x9d (the last encrypted module) DECRYPTED via its runtime consumer 0x9b (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C) — 71.6MB restored game code (12998 chunks, 0 fail) + 6.9MB patch. All 57 modules + 0x9d now fully decrypted. |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
-| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜` 65% | M3b: PLT 100% resolved statically (44,567 stubs from the SHIPPED .so — the 0x9d image is an overlay): 44,073 own-func thunks + 424 imports; 750K bl sites named. RTTI chain proven as ground truth — the 0x9e symbol DB addresses belong to a different build (usable as name pool only). sinatra cipher family reversed: custom-seeded RC4 (PRGA@0x39d3800, KSA from permutation table@0x14f7375) + custom-AES-192-shaped key expansion (0x39d3a30, custom S-boxes); embedded 24-byte keys found; runtime key = kv-store 'bq159_key' (server-issued). Next: M3c — BQ15915/BQ1597 32-B-block transform, data1.dat volume key. |
+| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜` 70% | M3c: sinatra consumer chain mapped end-to-end AND statically executable — decoder factory 0x1ef3750 (volume-entry flags -> SD159/SD144/SD40SE/Plane), all 3 cipher cores Unicorn-emulated (custom-AES-192 0x39d3300, CAST-128-style 0x39d4508, RC4 with 255-B periodic reload — M3b's sentinel semantics corrected), key expansion emulated, NTY header format (BE fields) + volume acquisition (seek/clip/wrap) + GlobalNtyPool local-cache path scheme root/%02X/name@version all reversed. data1.dat volume key proven NOT static (55K rodata strings swept, 0 hits). Next: M3d — cache write path + APU per-volume keydescs. |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜` 75% | M3b: the sinatra cipher family fully reversed — custom-seeded RC4 (255-B framed SD40SE variant) + custom-AES key schedule; keys: 3 embedded 24-B strings + server-issued 'bq159_key' via /users/register. data1.dat: all embedded keys tested negative (entropy oracle) — final volume key = M3c (32-B-block BQ15915/BQ1597 transform or server key). |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜` 80% | M3c: NTY container format reversed (BE header fields, per-volume {offset,size,mode,flags} entries, 32-B-block decode loop, 255-B framing for SD40SE); the game reads a LOCAL-CACHE copy (root/%02X/name@version) created on cache miss — that write path is the remaining data1.dat decryptor (M3d-1). All 3 embedded keys x 3 emulated cores negative; per-volume APU keydesc or server bq159_key remains. |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
-| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜` 70% | unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer + PLT resolver + RTTI explorer + sinatra crypto reimpl + Ghidra symbol/PLT/thunk scripts (tools/m3b_*, tools/ghidra-m3b/) + 3-OS CI matrix + Pages deploy |
-| Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜` 50% | 7 deep-dive notes published (7ffe loader, stage-2 crypto, M2 game consumer, M3 0x9d restore, architecture, engine, asset formats) + REA evidence dossiers per milestone |
+| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜` 75% | unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer + PLT resolver + RTTI explorer + sinatra crypto reimpl + Ghidra symbol/PLT/thunk scripts (tools/m3b_*, tools/ghidra-m3b/) + M3c Unicorn emulation harness & consumer-chain toolset (tools/m3c_emu.py, m3c_matrix.py, m3c_keysweep.py, m3c_pltmap.py, m3c_dag.py, m3c_gotsites.py …) + 3-OS CI matrix + Pages deploy |
+| Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜` 50% | 8 deep-dive notes published (7ffe loader, stage-2 crypto, M2 game consumer, M3 0x9d restore, M3b PLT/RTTI/cipher, M3c consumer chain, architecture, engine/asset formats) + REA evidence dossiers per milestone |
 
 **Platform shell — jp.co.drecom.bisque (1 cell = 1 class)** — 9/187 (4.8%)
 
@@ -86,6 +86,12 @@
 
 ```text
 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜
+```
+
+**M3c consumer chain — factory + 3 emulated cores + NTY format + key provenance + cache scheme (1 cell = 10%)** — 9/10 (90.0%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨
 ```
 
 <sub>Regenerate with `python3 tools/progress.py --write`. Percentages are measured against concrete units (classes, functions, formats, build targets) — never vibes.</sub>
@@ -151,9 +157,21 @@ The protection stack has been fully unwrapped, milestone by milestone:
   a custom-seeded RC4 plus a custom-S-box AES-192-shaped key schedule, three
   embedded 24-byte keys, and the server-issued `bq159_key` flow
   ([`notes/m3b-plt-rtti-cipher.md`](notes/m3b-plt-rtti-cipher.md)).
+- **M3c — the consumer chain, running.** The NTY read path is now mapped
+  end-to-end *and statically executable*: the decoder factory, the exact
+  **NTY container format** (big-endian header, per-volume
+  `{offset, size, mode, flags}` entries), the local-cache path scheme
+  (`root/%02X/name@version`), and **all three cipher cores emulated under
+  Unicorn** — a custom-AES-192, a CAST-128-style Feistel, and an RC4 whose
+  state reloads every 255 bytes (a correction of M3b's reading). The
+  default key's full provenance is traced ('16.2.1' descriptor → embedded
+  key → global context), and data1.dat's volume key is **proven not to be
+  any static string** — it lives in the per-volume APU descriptor or the
+  server-issued `bq159_key`
+  ([`notes/m3c-consumer-chain.md`](notes/m3c-consumer-chain.md)).
 
-What remains is the fun part: the last vtable hop to data1.dat's exact
-volume key — and then the actual clean-room rebuild.
+What remains is the fun part: the cache-write path that decrypts data1.dat
+on first run — and then the actual clean-room rebuild.
 
 ## Target facts (measured, not guessed)
 
@@ -309,7 +327,8 @@ Reproduce the full unpack with `tools/extract_apkm.sh` and
 | **M2c — matryoshka chain** | ✅ | 38.5 MB blob → 7 nested levels (e3→e8) → **57 modules, 0 failures** — `tools/matryoshka_chain.py` |
 | **M3 — engine `.text` restore** | ✅ | 0x9d decrypted via consumer 0x9b (71.6 MB, 12,998 chunks, 0 fail) + 6.9 MB patch; 80,005 symbols from 0x9e; data1.dat consumer chain mapped — [`notes/m3-9d-restore.md`](notes/m3-9d-restore.md) |
 | **M3b — PLT + RTTI + sinatra cipher** | ✅ | PLT 100 % resolved statically (44,567 stubs from the shipped .so — the 0x9d image is an overlay); RTTI chain = ground truth (0x9e DB addresses proven mis-mapped); **sinatra cipher family reversed**: custom-seeded RC4 + custom-AES-192-shaped key schedule; embedded 24-B keys + server-issued `bq159_key` flow documented — [`notes/m3b-plt-rtti-cipher.md`](notes/m3b-plt-rtti-cipher.md) |
-| **M3c — data1.dat volume key** | 🔶 next | one vtable level to the 32-B-block transform (BQ15915/BQ1597); decrypt data1.dat against the bits-0/1 known-plaintext oracle |
+| **M3c — consumer chain end-to-end** | ✅ | decoder factory + volume-entry format; all 3 cipher cores **Unicorn-emulated** (custom-AES-192 `0x39d3300`, CAST-128-style `0x39d4508`, RC4 `0x39d3800` with **255-B periodic reload** — M3b's sentinel semantics corrected); key expansion + default-key provenance ('16.2.1' descriptor → key[0] → globals); NTY header format + volume acquisition; **GlobalNtyPool local-cache path scheme** (`root/%02X/name@version`); data1.dat key proven NOT static (55,520 rodata strings swept, 0 hits) — [`notes/m3c-consumer-chain.md`](notes/m3c-consumer-chain.md) |
+| **M3d — the cache write path** | 🔶 next | who creates `root/%02X/name@version` on cache miss (the real data1.dat decryptor) + the APU per-volume keydesc table at 0x4203e30 |
 | **M4 — JNI table** | ⬜ | walk the hidden module system's Java-facing API surface |
 | **M5 — renderer** | ⬜ | GLES2 scene graph reimplementation (biggest module) |
 | **M6 — gameplay** | ⬜ | battle system, then everything else, block by block |

@@ -40,9 +40,9 @@
   {
    "id": "engine-core",
    "name": "Engine core — libgame.so",
-   "done": 65,
+   "done": 70,
    "weight": 20,
-   "note": "M3b: PLT 100% resolved statically (44,567 stubs from the SHIPPED .so — the 0x9d image is an overlay): 44,073 own-func thunks + 424 imports; 750K bl sites named. RTTI chain proven as ground truth — the 0x9e symbol DB addresses belong to a different build (usable as name pool only). sinatra cipher family reversed: custom-seeded RC4 (PRGA@0x39d3800, KSA from permutation table@0x14f7375) + custom-AES-192-shaped key expansion (0x39d3a30, custom S-boxes); embedded 24-byte keys found; runtime key = kv-store 'bq159_key' (server-issued). Next: M3c — BQ15915/BQ1597 32-B-block transform, data1.dat volume key."
+   "note": "M3c: sinatra consumer chain mapped end-to-end AND statically executable — decoder factory 0x1ef3750 (volume-entry flags -> SD159/SD144/SD40SE/Plane), all 3 cipher cores Unicorn-emulated (custom-AES-192 0x39d3300, CAST-128-style 0x39d4508, RC4 with 255-B periodic reload — M3b's sentinel semantics corrected), key expansion emulated, NTY header format (BE fields) + volume acquisition (seek/clip/wrap) + GlobalNtyPool local-cache path scheme root/%02X/name@version all reversed. data1.dat volume key proven NOT static (55K rodata strings swept, 0 hits). Next: M3d — cache write path + APU per-volume keydescs."
   },
   {
    "id": "engine-graphics",
@@ -61,9 +61,9 @@
   {
    "id": "asset-formats",
    "name": "Asset formats & pipelines",
-   "done": 75,
+   "done": 80,
    "weight": 12,
-   "note": "M3b: the sinatra cipher family fully reversed — custom-seeded RC4 (255-B framed SD40SE variant) + custom-AES key schedule; keys: 3 embedded 24-B strings + server-issued 'bq159_key' via /users/register. data1.dat: all embedded keys tested negative (entropy oracle) — final volume key = M3c (32-B-block BQ15915/BQ1597 transform or server key)."
+   "note": "M3c: NTY container format reversed (BE header fields, per-volume {offset,size,mode,flags} entries, 32-B-block decode loop, 255-B framing for SD40SE); the game reads a LOCAL-CACHE copy (root/%02X/name@version) created on cache miss — that write path is the remaining data1.dat decryptor (M3d-1). All 3 embedded keys x 3 emulated cores negative; per-volume APU keydesc or server bq159_key remains."
   },
   {
    "id": "build-android",
@@ -89,9 +89,9 @@
   {
    "id": "tooling",
    "name": "Tooling & CI",
-   "done": 70,
+   "done": 75,
    "weight": 6,
-   "note": "unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer + PLT resolver + RTTI explorer + sinatra crypto reimpl + Ghidra symbol/PLT/thunk scripts (tools/m3b_*, tools/ghidra-m3b/) + 3-OS CI matrix + Pages deploy"
+   "note": "unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer + PLT resolver + RTTI explorer + sinatra crypto reimpl + Ghidra symbol/PLT/thunk scripts (tools/m3b_*, tools/ghidra-m3b/) + M3c Unicorn emulation harness & consumer-chain toolset (tools/m3c_emu.py, m3c_matrix.py, m3c_keysweep.py, m3c_pltmap.py, m3c_dag.py, m3c_gotsites.py …) + 3-OS CI matrix + Pages deploy"
   },
   {
    "id": "docs",
@@ -148,6 +148,13 @@
    "label": "Engine PLT + sinatra cipher — 44,567 stubs resolved, cipher family reversed (1 cell = 10%)",
    "total": 10,
    "done": 8,
+   "in_progress": 1,
+   "per_row": 10
+  },
+  {
+   "label": "M3c consumer chain — factory + 3 emulated cores + NTY format + key provenance + cache scheme (1 cell = 10%)",
+   "total": 10,
+   "done": 9,
    "in_progress": 1,
    "per_row": 10
   }
@@ -216,6 +223,14 @@
    "evidence": "evidence/m3b-plt.json",
    "notes": "notes/m3b-plt-rtti-cipher.md",
    "tools": "tools/m3b_plt_resolve.py"
+  },
+  {
+   "id": "M3c",
+   "name": "Consumer chain end-to-end — factory, emulated ciphers, key provenance, cache scheme",
+   "done": 100,
+   "evidence": "evidence/m3c-consumer-chain.json",
+   "notes": "notes/m3c-consumer-chain.md",
+   "tools": "tools/m3c_emu.py"
   }
  ]
 }

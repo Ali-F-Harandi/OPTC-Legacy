@@ -1,0 +1,60 @@
+{
+  "stage": "M3c",
+  "result": "sinatra consumer chain mapped end-to-end and statically executable; data1.dat key proven NOT static (per-volume/cache-side)",
+  "class_dag": {
+    "method": "RTTI on patch 0x403 relocs; __class_type_info vt=0x417aa90, __si_class_type_info vt=0x417aae0",
+    "families": {
+      "IO::Stream": ["FileStream", "BinaryStream", "Private::ClipStream", "BQ15915BQ159ReadStream (slot4=sinatraCall 0x1ef3ae4 -> tail-calls slot5)", "BQ15927SeqnentialDecodeStream", "NtyReader::NtyInnnerFDS"],
+      "BQ15913StreamDecoder (root)": ["BQ15918StreamDecoderPlane", "BQ15921AbstractStreamDecoder -> {SD159, SD144, SD40SE}"],
+      "BQ1597Decoder (root)": ["BQ15910Decoder{159,144,40SE}", "BQ15912DecoderPlane (= plain memcpy, identity)"]
+    }
+  },
+  "factory": {
+    "addr": "0x1ef3750",
+    "plt": "0x3f2c2b0",
+    "volume_entry_fields": {"0x25c": "flags", "0x260": "class-bits", "0x264": "index", "0x268": "offset", "0x26c": "size", "0x270": "mode"},
+    "class_bits": {"bit29_of_0x25c": "DecoderPlane", "bit0_of_0x260": "SD159", "bit2": "SD144", "bit1": "SD40SE"},
+    "ctors": {"SD159/SD144": "0x1ef4078 (PLT 0x3f2c570)", "SD40SE": "0x1ef3e20 (PLT 0x3f2c560)"}
+  },
+  "ciphers": {
+    "expansion": {"entry": "0x39d39f4", "body": "0x39d3a30", "holder": "0x28 B {flags@8, aes_state@0x10, rc4_state@0x18, cast_state@0x20}", "modes": {"bit30": "RC4 state build (KSA over T1-seeded S)", "bit29": "CAST 0x2090-B state", "0xE0000000": "all"}},
+    "cipher159": {"addr": "0x39d3300", "kind": "custom-AES-192-shaped, 16-B blocks, reversed round-key order, T1[T2[b]] SubBytes, tbl ShiftRows [0,1,2,3,7,4,5,6,10,11,8,9,13,14,15,12], table-GF MixColumns 0x39d2f4c"},
+    "cipher144": {"addr": "0x39d4508", "kind": "CAST-128-style Feistel, 8-B blocks, S-boxes at cast_state+0x48/0x448/0x848/0xc48"},
+    "rc4": {"addr": "0x39d3800", "correction": "i==0xFF sentinel checked EVERY iteration -> state reloads from pristine every 255 bytes; KEYSTREAM PERIOD 255 (M3b read it as first-use-only)", "seek": "0x1ef46d4 frames at 255-B boundaries"},
+    "emulation": "tools/m3c_emu.py (Unicorn; service GOT hooks calloc 0x41cad68 / malloc 0x41b9178 / memcpy 0x41b8830 / free 0x41b9198; Python RC4 reimpl == emulated core byte-exact)"
+  },
+  "key_provenance": {
+    "version_descriptor": "0x4214098 {'16.2.1', keys[0x42140a0..]: vuyWQSjlknpJF54ib36txVse / QZbidYS5LulOhQfbXJPVR5FG / JGcu2DjohFm84viZHe1Et5Qt, then font names}",
+    "static_init": "0x1ca92cc -> globals 0x4243cf0 (ptr) / 0x4243cf8 (len=24) via descriptor table 0x4186980",
+    "install_global_key": "0x1f2c6a0 (mode 0xE0000000) -> set_global_key 0x39fec40 -> NTYPOOL_GLOBAL_CONTEXT (vt 0x414c260, GOT 0x41b64b0) +8",
+    "factory_key_source": "per-call param+0x20, else the global; SD40SE ctor reads keydesc+8 wrapper {flags@8, spec@0x10{len@0x18, bytes@0x20}} via 0x39d3fd0",
+    "runtime_override": "session manager 0x1ce3bcc-family, kv-store bq159_key (server-issued)"
+  },
+  "nty_format": {
+    "open": "NtyReader::open 0x39dda24 -> parse_NTY 0x39ddab4",
+    "header": "BE fields: u16@+0x34, u16@+0x36, u32@+0x38 (volume count), u16@+0x3c, u32@+0x40, read raw from the stream",
+    "volume_parse": ["0x39de16c read_volume_entry", "0x39de5d0 parse_volume (<=0xC0 B sequential headers)"],
+    "acquire": "0x39def6c: seek(volume+0x268) + clip(size 0x26c) + wrap via 0x39df238",
+    "readable_path": "GlobalNtyPool::lookupReadablePath 0x3a061ac -> LOCAL CACHE 'root/%02X/name' / 'root/%02X/name@version' (31-hash dir); root = manager+0x80; cache-miss branch in fn 0x3a00388 -> 0x3a00a58/0x3a01f70/0x3a05958",
+    "apu_table": "static fn-pointer table 0x4203e30 contains the open-volume fn 0x3a00388 (per-volume keydescs originate here)"
+  },
+  "data1_dat": {
+    "shape": "[4 B head][181696 B 16-aligned body], entropy 7.9855, even-byte low-bit bias (bits 0-1 of every u16; 0x100-multiples 2.8x chance)",
+    "negative_tests": [
+      "3 embedded keys x 3 emulated cores (m3c_matrix.py) on the 64/255-B head",
+      "55,520 printable rodata strings x RC4-255 with NTY-header oracle (m3c_keysweep.py): 0 hits",
+      "container parse at offsets 0/2/4/8/16 for all 16-bit ids: 0 hits",
+      "key-independent period tests XOR+additive lags 1..4096: no repetition",
+      "M1b: dd70 2^32 sweep, outer container, 7ffe cipher, eb34->fc30 CBC, shipped AES-256 CBC/ECB, zlib (all negative)",
+      "M2b: e3 evolving stream 2^32 sweep (negative)"
+    ],
+    "conclusion": "the volume key is not any static string; it is per-volume (APU descriptor / cache-side) or the server-issued bq159_key"
+  },
+  "next": [
+    "M3d-1: the cache WRITE path (who creates root/%02X/name@version) - the real data1.dat decryptor",
+    "M3d-2: dump the APU table 0x4203e30 + registration to enumerate per-volume keydescs",
+    "M3d-3: extend m3c_matrix.py once the keydesc format is confirmed",
+    "M3d-4: determine whether first-run cache creation is offline-able (embedded key) or requires bq159_key"
+  ],
+  "tools": ["tools/m3c_emu.py", "tools/m3c_matrix.py", "tools/m3c_keysweep.py", "tools/m3c_pltmap.py", "tools/m3c_plt.py", "tools/m3c_dag.py", "tools/m3c_gotsites.py", "tools/m3c_gotref.py", "tools/m3c_strref.py", "tools/m3c_sd40se_test.py", "tools/m3c_period.py"]
+}
