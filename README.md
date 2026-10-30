@@ -5,7 +5,7 @@
 [![build](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/build.yml/badge.svg)](../../actions)
 [![deploy-web](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/deploy-pages.yml/badge.svg)](../../actions/workflows/deploy-pages.yml)
 [![play](https://img.shields.io/badge/play-web%20build%20%28WASM%29-6ea8ff?logo=githubpages&logoColor=white)](https://ali-f-harandi.github.io/OPTC-Legacy/)
-[![progress](https://img.shields.io/badge/decompilation-43.6%25-blue)](PROGRESS.json)
+[![progress](https://img.shields.io/badge/decompilation-46.2%25-blue)](PROGRESS.json)
 [![target](https://img.shields.io/badge/target-16.2.1%20%221621%22-critical)](hashes.txt)
 [![license](https://img.shields.io/badge/legal-clean--room%20RE-important)](#legal)
 
@@ -15,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 43.6% decompiled & rebuilt**
+**Overall — 46.2% decompiled & rebuilt**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░  43.6%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░  46.2%
 ```
 
 | Module | Progress | Status |
@@ -28,14 +28,14 @@
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
 | Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | M3 DONE: 0x9d (the last encrypted module) DECRYPTED via its runtime consumer 0x9b (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C) — 71.6MB restored game code (12998 chunks, 0 fail) + 6.9MB patch. All 57 modules + 0x9d now fully decrypted. |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
-| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜` 60% | M3: 0x9d = 71.6MB libgame.so .text overlay (code [0x1C00000,0x4000000), offsets == libgame vaddrs). 0x9e = blanked-dynsym DB (80005 FUNC symbols recovered). All four driver modules 0x81/0x8f/0x96/0x9b pseudocoded — 484 functions in decomp/game-modules/. 470 import GOT slots mapped (evidence/m3-got-map.json). Next: resolve 272 0xb2 PLT trampolines, decompile NtyReader/sinatra decoders, find data1.dat name construction. |
+| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜` 65% | M3b: PLT 100% resolved statically (44,567 stubs from the SHIPPED .so — the 0x9d image is an overlay): 44,073 own-func thunks + 424 imports; 750K bl sites named. RTTI chain proven as ground truth — the 0x9e symbol DB addresses belong to a different build (usable as name pool only). sinatra cipher family reversed: custom-seeded RC4 (PRGA@0x39d3800, KSA from permutation table@0x14f7375) + custom-AES-192-shaped key expansion (0x39d3a30, custom S-boxes); embedded 24-byte keys found; runtime key = kv-store 'bq159_key' (server-issued). Next: M3c — BQ15915/BQ1597 32-B-block transform, data1.dat volume key. |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜` 65% | M3: data1.dat name NOT stored anywhere (6 encodings x game code/symbols/DEX/protector modules all negative; DEX string ids 23589/23590 have 0 const-string refs). File access chain identified: 0x8f APK finder (maps->split table->openat) + e1 ZIP parser (EOCD/CD/x31 hash) + bisqueBase NtyReader/BQ1599BisqueKey/BQ15916 sinatraCall. 7ffe = build-randomized tag, path runtime-derived. 0x9b keys tested on data1.dat: negative. |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜` 75% | M3b: the sinatra cipher family fully reversed — custom-seeded RC4 (255-B framed SD40SE variant) + custom-AES key schedule; keys: 3 embedded 24-B strings + server-issued 'bq159_key' via /users/register. data1.dat: all embedded keys tested negative (entropy oracle) — final volume key = M3c (32-B-block BQ15915/BQ1597 transform or server key). |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
-| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜` 65% | unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer (tools/m3_decrypt_9d.py) + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy |
+| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜` 70% | unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer + PLT resolver + RTTI explorer + sinatra crypto reimpl + Ghidra symbol/PLT/thunk scripts (tools/m3b_*, tools/ghidra-m3b/) + 3-OS CI matrix + Pages deploy |
 | Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜` 50% | 7 deep-dive notes published (7ffe loader, stage-2 crypto, M2 game consumer, M3 0x9d restore, architecture, engine, asset formats) + REA evidence dossiers per milestone |
 
 **Platform shell — jp.co.drecom.bisque (1 cell = 1 class)** — 9/187 (4.8%)
@@ -80,6 +80,12 @@
 
 ```text
 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨
+```
+
+**Engine PLT + sinatra cipher — 44,567 stubs resolved, cipher family reversed (1 cell = 10%)** — 8/10 (80.0%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜
 ```
 
 <sub>Regenerate with `python3 tools/progress.py --write`. Percentages are measured against concrete units (classes, functions, formats, build targets) — never vibes.</sub>
@@ -137,10 +143,17 @@ The protection stack has been fully unwrapped, milestone by milestone:
   back **80,005 function symbols** blanked from the shipped dynsym
   ([`notes/m3-9d-restore.md`](notes/m3-9d-restore.md)). All four runtime
   driver modules are pseudocoded in `decomp/game-modules/` (484 functions).
+- **M3b — reading the engine.** The restored image is an *overlay* over the
+  shipped `.so`, so the **entire 44,567-stub PLT was resolved statically**
+  (44,073 calls to the game's own preemptible functions + 424 imports —
+  750,000 call sites named). RTTI chains became the ground truth after the
+  0x9e symbol DB proved mis-mapped. The **sinatra cipher family fell**:
+  a custom-seeded RC4 plus a custom-S-box AES-192-shaped key schedule, three
+  embedded 24-byte keys, and the server-issued `bq159_key` flow
+  ([`notes/m3b-plt-rtti-cipher.md`](notes/m3b-plt-rtti-cipher.md)).
 
-What remains is the fun part: statically resolving the runtime-built PLT,
-reading the engine in the clear, cracking `data1.dat`'s bisque *sinatra*
-cipher — and then the actual clean-room rebuild.
+What remains is the fun part: the last vtable hop to data1.dat's exact
+volume key — and then the actual clean-room rebuild.
 
 ## Target facts (measured, not guessed)
 
@@ -189,6 +202,7 @@ Deep-dives: [`notes/architecture.md`](notes/architecture.md) ·
 [`notes/stage2-crypto.md`](notes/stage2-crypto.md) ·
 [`notes/m2-game-consumer.md`](notes/m2-game-consumer.md) ·
 [`notes/m3-9d-restore.md`](notes/m3-9d-restore.md) ·
+[`notes/m3b-plt-rtti-cipher.md`](notes/m3b-plt-rtti-cipher.md) ·
 [`notes/asset-format.md`](notes/asset-format.md)
 
 ## Repository layout
@@ -294,7 +308,8 @@ Reproduce the full unpack with `tools/extract_apkm.sh` and
 | **M2b — data1.dat cryptanalysis** | ✅ | exhaustive 2^32 key sweep (0 hits) + ciphertext-only analysis: cipher is 16-bit-granular, bisque-side, not protector-side |
 | **M2c — matryoshka chain** | ✅ | 38.5 MB blob → 7 nested levels (e3→e8) → **57 modules, 0 failures** — `tools/matryoshka_chain.py` |
 | **M3 — engine `.text` restore** | ✅ | 0x9d decrypted via consumer 0x9b (71.6 MB, 12,998 chunks, 0 fail) + 6.9 MB patch; 80,005 symbols from 0x9e; data1.dat consumer chain mapped — [`notes/m3-9d-restore.md`](notes/m3-9d-restore.md) |
-| **M3b — static PLT + data1.dat key** | 🔶 next | resolve the 272 runtime PLT trampolines → decompile `NtyReader`/sinatra decoders → recover the `7ffe/data1.dat` key |
+| **M3b — PLT + RTTI + sinatra cipher** | ✅ | PLT 100 % resolved statically (44,567 stubs from the shipped .so — the 0x9d image is an overlay); RTTI chain = ground truth (0x9e DB addresses proven mis-mapped); **sinatra cipher family reversed**: custom-seeded RC4 + custom-AES-192-shaped key schedule; embedded 24-B keys + server-issued `bq159_key` flow documented — [`notes/m3b-plt-rtti-cipher.md`](notes/m3b-plt-rtti-cipher.md) |
+| **M3c — data1.dat volume key** | 🔶 next | one vtable level to the 32-B-block transform (BQ15915/BQ1597); decrypt data1.dat against the bits-0/1 known-plaintext oracle |
 | **M4 — JNI table** | ⬜ | walk the hidden module system's Java-facing API surface |
 | **M5 — renderer** | ⬜ | GLES2 scene graph reimplementation (biggest module) |
 | **M6 — gameplay** | ⬜ | battle system, then everything else, block by block |

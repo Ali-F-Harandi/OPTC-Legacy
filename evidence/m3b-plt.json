@@ -1,0 +1,90 @@
+{
+ "stage": "M3b",
+ "result": "PLT statically resolved; sinatra cipher family reversed",
+ "plt": {
+  "region": "[0x3F0B230, 0x3FB93C0)",
+  "source": "shipped libgame.so .plt (0x9d image is an overlay \u2014 its zero spans overlap shipped regions)",
+  "stub_format": "adrp x16,<got page>; ldr x17,[x16,#off]; add x16,x16,#off; br x17 (16 B)",
+  "stubs_decoded": 44569,
+  "bad": 2,
+  "to_own_functions": 44073,
+  "to_imports": 424,
+  "unresolved": 72,
+  "bl_sites": 750047,
+  "bl_unique_targets": 38477,
+  "top_called": [
+   {
+    "stub": "0x3f0b310",
+    "calls": 151171,
+    "target": "0x3f03c8c",
+    "note": "operator delete family (unsymbolized)"
+   },
+   {
+    "stub": "0x3f0b2e0",
+    "calls": 40255,
+    "target": "0x3f0b124",
+    "note": "operator new family (unsymbolized)"
+   },
+   {
+    "stub": "0x3f0b290",
+    "calls": 36482,
+    "import": "__strlen_chk"
+   },
+   {
+    "stub": "0x3f0b910",
+    "calls": 15122,
+    "import": "strtoull"
+   },
+   {
+    "stub": "0x3f0b3f0",
+    "calls": 3887,
+    "import": "longjmp"
+   },
+   {
+    "stub": "0x3f0b2f0",
+    "calls": 3742,
+    "import": "glUniform3fv"
+   }
+  ]
+ },
+ "symbol_db_correction": {
+  "finding": "0x9e DB (80005 FUNC name->addr) does NOT match the restored 0x9d .text",
+  "method": "RTTI chain (typeinfo-name <-0x403- typeinfo <-0x403- vtable -> methods) is ground truth",
+  "examples": [
+   {
+    "symbol": "BQ1599BisqueKey(char const*)",
+    "db_addr": "0x3500dec",
+    "actual_class": "MstCharacterGroupModel"
+   },
+   {
+    "symbol": "BQ15916StreamDecoder::seek",
+    "db_addr": "0x2b74d14",
+    "actual_class": "Quest::ComboCount"
+   }
+  ]
+ },
+ "cipher": {
+  "family": "bisque sinatra",
+  "stream_prga": "0x39d3800 (RC4 PRGA, verbatim)",
+  "ksa": "custom-seeded: S0 = 256-B permutation table @0x14f7375; standard RC4 KSA over key",
+  "framing": "SD40SE: 255-B frames, re-seed on seek (0x1ef46d4)",
+  "key_expansion": {
+   "dispatch": "0x39d39f4 (validates keylen {4,8,16,24,32}, rounds from table @0x1464760)",
+   "core": "0x39d3a30",
+   "shape": "AES-192-style (24-B key -> 12 rounds, 208-B schedule)",
+   "sboxes": "T1@0x14f7375 T2@0x14f7475 T3@0x14f7575 T4@0x14f7675 (custom, not AES)",
+   "rcon": "T1[T3[adj + T1[T4[r]]]], adj=0x19/-0xE6"
+  },
+  "key_sources": {
+   "embedded": [
+    "vuyWQSjlknpJF54ib36txVse@0x1329f11",
+    "QZbidYS5LulOhQfbXJPVR5FG@0x1459d58",
+    "JGcu2DjohFm84viZHe1Et5Qt@0x1377000",
+    "DFGRomanYuki-W9@0x139653d"
+   ],
+   "descriptor": "@0x4186980: version ptr, key ptr, sizes {24,24,8,1224}, BSS {0x4243cf0, 0x4243cf8}",
+   "runtime": "kv-store 'bq159_key' (server-issued at /users/register; store tag v15.0.0_sent_store_info)"
+  },
+  "data1_dat_status": "custom-RC4 with all embedded keys: negative (entropy 7.90-7.96); M3c: BQ15915/BQ1597 32-B-block transform or server-issued key"
+ }
+}
