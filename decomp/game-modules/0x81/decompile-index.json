@@ -1,0 +1,187 @@
+{
+ "version": 1,
+ "module_id": "0x81",
+ "target": "game-side protector module 0x81 (decrypted image)",
+ "target_sha256": "0f021db9cfec9bcb2fd4cfc21da2c68ccbd7ffcdf8780da3189da5d663b703de",
+ "provider": {
+  "id": "ghidra",
+  "name": "Ghidra",
+  "version": "11.3.2"
+ },
+ "processor": "AARCH64:LE:64:v8A",
+ "layout": "address",
+ "layout_status": "address",
+ "limitations": [
+  "Raw decompiler output: FUN_* names are auto-generated; symbol names are recovered separately via the 0x9e restoration DB (see notes/m3-9d-restore.md)."
+ ],
+ "functions": [
+  {
+   "address": "0x00000000",
+   "name": "Reset",
+   "status": "written",
+   "relative_path": "functions/0x00000000.c",
+   "sha256": "34909423c41ed197b9ad0046211b874d30a610f425c80d4eb349c20003a314b2"
+  },
+  {
+   "address": "0x00000660",
+   "name": "FUN_00000660",
+   "status": "written",
+   "relative_path": "functions/0x00000660.c",
+   "sha256": "17d0fc2f4063dc976463e458781970984bed1f9aa1c82afda09cb317d958f017"
+  },
+  {
+   "address": "0x000006ec",
+   "name": "FUN_000006ec",
+   "status": "written",
+   "relative_path": "functions/0x000006ec.c",
+   "sha256": "fa1f7e610b6bac9b19fa3b52a22b46fdba75d7e026c5472922aae5786750947a"
+  },
+  {
+   "address": "0x00000724",
+   "name": "FUN_00000724",
+   "status": "written",
+   "relative_path": "functions/0x00000724.c",
+   "sha256": "2fe5db247996687e0add488ecded03922530fe2c347272ab1d0678bb48227bbb"
+  },
+  {
+   "address": "0x00001b58",
+   "name": "FUN_00001b58",
+   "status": "written",
+   "relative_path": "functions/0x00001b58.c",
+   "sha256": "fc79059c9bf4d3275e696065ecb56b7109bf7d28a39ceb23a8da9b2acaba270f"
+  },
+  {
+   "address": "0x00001d34",
+   "name": "FUN_00001d34",
+   "status": "written",
+   "relative_path": "functions/0x00001d34.c",
+   "sha256": "50047547f0d14612212a3be6e6d5daa05f672ba0b49eb9b3bf742b17adfbc920"
+  },
+  {
+   "address": "0x00001d3c",
+   "name": "FUN_00001d3c",
+   "status": "written",
+   "relative_path": "functions/0x00001d3c.c",
+   "sha256": "c356d2348b17d6ca8bb97aa9b83afd5fca8d9d896f8a9cf84a29777d922f8352"
+  },
+  {
+   "address": "0x00001e60",
+   "name": "FUN_00001e60",
+   "status": "written",
+   "relative_path": "functions/0x00001e60.c",
+   "sha256": "6cb82e5a317bba6d141d6466cae92894f5b94786fe39a76571608c4c2660ab0a"
+  },
+  {
+   "address": "0x00001f30",
+   "name": "FUN_00001f30",
+   "status": "written",
+   "relative_path": "functions/0x00001f30.c",
+   "sha256": "1fee073511fe6fd4c9a338bf9ca0d22f96d75e231826cec15a4ceb43f987c08a"
+  },
+  {
+   "address": "0x00001fc0",
+   "name": "FUN_00001fc0",
+   "status": "written",
+   "relative_path": "functions/0x00001fc0.c",
+   "sha256": "e79bf9eb69a1ef8234bb09226c568f3a0d9c7cb4f2fac9a3ee1b8149ef449480"
+  },
+  {
+   "address": "0x000020f4",
+   "name": "FUN_000020f4",
+   "status": "written",
+   "relative_path": "functions/0x000020f4.c",
+   "sha256": "4ee0dfd93d509d60f7aa6888326018fc1ca309aac235fb010e4b2e8f719b8045"
+  },
+  {
+   "address": "0x00002238",
+   "name": "FUN_00002238",
+   "status": "written",
+   "relative_path": "functions/0x00002238.c",
+   "sha256": "ab3524b2b16c73ddea72de5d989562412649f5819d26627c48c02dc82c78895f"
+  },
+  {
+   "address": "0x00002830",
+   "name": "FUN_00002830",
+   "status": "written",
+   "relative_path": "functions/0x00002830.c",
+   "sha256": "1c780fc4d07051b3b13e1ea9c9dd8d575fb32c3a9e3daca66fcc63502a6503d6"
+  },
+  {
+   "address": "0x00002868",
+   "name": "FUN_00002868",
+   "status": "written",
+   "relative_path": "functions/0x00002868.c",
+   "sha256": "84a2e014a932fa374169baf5262e1dd13a9423fc947a41ece22a386380c388a1"
+  },
+  {
+   "address": "0x00002940",
+   "name": "FUN_00002940",
+   "status": "written",
+   "relative_path": "functions/0x00002940.c",
+   "sha256": "30630cdf611998f525548629164d9775464acf4279a02ebacae96282afb28102"
+  },
+  {
+   "address": "0x00002b60",
+   "name": "FUN_00002b60",
+   "status": "written",
+   "relative_path": "functions/0x00002b60.c",
+   "sha256": "61cb6690897f51ce6ad82ae9e8043be668cef3e06fba692261297a1928e4ac88"
+  },
+  {
+   "address": "0x00002ba0",
+   "name": "FUN_00002ba0",
+   "status": "written",
+   "relative_path": "functions/0x00002ba0.c",
+   "sha256": "b59aca938639898f27dc96f818dd92a13d9945130af2a960155348b321289ec3"
+  },
+  {
+   "address": "0x00002dc8",
+   "name": "FUN_00002dc8",
+   "status": "written",
+   "relative_path": "functions/0x00002dc8.c",
+   "sha256": "8db6255e016e208e277f0e66a04c407bb56a970542e9a5d04194eec50e71cf24"
+  },
+  {
+   "address": "0x00002e10",
+   "name": "FUN_00002e10",
+   "status": "written",
+   "relative_path": "functions/0x00002e10.c",
+   "sha256": "d5918a703775fb0a183bdfda8be1e227b316ffc065e70a1672d4cefba1c88a32"
+  },
+  {
+   "address": "0x00002e74",
+   "name": "FUN_00002e74",
+   "status": "written",
+   "relative_path": "functions/0x00002e74.c",
+   "sha256": "8982219d229ee4139fc71a4239a7a1dbff3b1c020dded9df6979686e95a40876"
+  },
+  {
+   "address": "0x000031c8",
+   "name": "FUN_000031c8",
+   "status": "written",
+   "relative_path": "functions/0x000031c8.c",
+   "sha256": "22b7e6844cd9142ab80194798bf5d05ab424d53e8e51c158297db630c1491f20"
+  },
+  {
+   "address": "0x00003310",
+   "name": "FUN_00003310",
+   "status": "written",
+   "relative_path": "functions/0x00003310.c",
+   "sha256": "4994388e51554d519e55c1d166701ec1c75d83da5672e4699ba3196edeea3831"
+  },
+  {
+   "address": "0x00003318",
+   "name": "FUN_00003318",
+   "status": "written",
+   "relative_path": "functions/0x00003318.c",
+   "sha256": "38a5ce5b8ce482292668ae1db05136b78f2c1a6b3f622d78de235eedcf8c2ea4"
+  },
+  {
+   "address": "0x0000334c",
+   "name": "FUN_0000334c",
+   "status": "written",
+   "relative_path": "functions/0x0000334c.c",
+   "sha256": "1f278e182b1057149c30dd73c2aa45b0d88453d6df0a20c5a71d13d74936c51c"
+  }
+ ]
+}

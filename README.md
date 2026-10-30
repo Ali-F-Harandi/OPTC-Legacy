@@ -5,7 +5,7 @@
 [![build](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/build.yml/badge.svg)](../../actions)
 [![deploy-web](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/deploy-pages.yml/badge.svg)](../../actions/workflows/deploy-pages.yml)
 [![play](https://img.shields.io/badge/play-web%20build%20%28WASM%29-6ea8ff?logo=githubpages&logoColor=white)](https://ali-f-harandi.github.io/OPTC-Legacy/)
-[![progress](https://img.shields.io/badge/decompilation-32.4%25-blue)](PROGRESS.json)
+[![progress](https://img.shields.io/badge/decompilation-43.6%25-blue)](PROGRESS.json)
 [![target](https://img.shields.io/badge/target-16.2.1%20%221621%22-critical)](hashes.txt)
 [![license](https://img.shields.io/badge/legal-clean--room%20RE-important)](#legal)
 
@@ -15,10 +15,10 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 32.4% decompiled & rebuilt**
+**Overall — 43.6% decompiled & rebuilt**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  26.1%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░  43.6%
 ```
 
 | Module | Progress | Status |
@@ -26,17 +26,17 @@
 | Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
 | Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
-| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | **M3: every layer open.** Stage-1/2 reversed; 7-level matryoshka (f3→f8, processors e3→e8, per-level private keys) → 57 modules, 0 failures; and the last holdout **0x9d decrypted via its runtime consumer 0x9b** (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C): 71.6 MB of restored engine code (12,998 chunks, 0 fail) + 6.9 MB patch. data1.dat cipher still open (16-bit-granular, bisque sinatra family) |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | M3 DONE: 0x9d (the last encrypted module) DECRYPTED via its runtime consumer 0x9b (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C) — 71.6MB restored game code (12998 chunks, 0 fail) + 6.9MB patch. All 57 modules + 0x9d now fully decrypted. |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
-| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨` 32% | **M3: the .text is back.** 0x9d = a libgame .text overlay (module offsets == libgame vaddrs; code [0x1C00000,0x4000000)); 0x9e = the blanked-dynsym restoration DB → **80,005 function symbols recovered** (cocos2d-x, masterdb, litesql, CRIWare, bisque, Quest/Kizuna…); 425 imports incl. AAssetManager_open; PLT stubs runtime-built from 0xb2's 272 trampoline records. Next: static PLT resolution → mass decompile |
+| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜` 60% | M3: 0x9d = 71.6MB libgame.so .text overlay (code [0x1C00000,0x4000000), offsets == libgame vaddrs). 0x9e = blanked-dynsym DB (80005 FUNC symbols recovered). All four driver modules 0x81/0x8f/0x96/0x9b pseudocoded — 484 functions in decomp/game-modules/. 470 import GOT slots mapped (evidence/m3-got-map.json). Next: resolve 272 0xb2 PLT trampolines, decompile NtyReader/sinatra decoders, find data1.dat name construction. |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨` 40% | 7-level matryoshka chain + 0x9d module format reversed; **data1.dat consumer chain mapped**: 0x8f APK finder (/proc/self/maps → split table → openat .apk) + e1 ZIP parser (EOCD/CD walk, ×31 name hash) + read_zip_entry + bisqueBase NtyReader/BQ1599BisqueKey/BQ15916 sinatraCall decoder family. Name "data1.dat" proven absent everywhere (6 encodings; DEX ids 23589/23590 have 0 const-string refs) — path is runtime-derived from the build-randomized `7ffe` tag |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜` 65% | M3: data1.dat name NOT stored anywhere (6 encodings x game code/symbols/DEX/protector modules all negative; DEX string ids 23589/23590 have 0 const-string refs). File access chain identified: 0x8f APK finder (maps->split table->openat) + e1 ZIP parser (EOCD/CD/x31 hash) + bisqueBase NtyReader/BQ1599BisqueKey/BQ15916 sinatraCall. 7ffe = build-randomized tag, path runtime-derived. 0x9b keys tested on data1.dat: negative. |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
-| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜` 58% | unpacker + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy |
-| Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 40% | architecture map + engine deep-dive notes published |
+| Tooling & CI | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜` 65% | unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer (tools/m3_decrypt_9d.py) + cipher attack toolkit + 3-OS CI matrix (Linux/macOS/Windows) + Pages deploy |
+| Documentation | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜` 50% | 7 deep-dive notes published (7ffe loader, stage-2 crypto, M2 game consumer, M3 0x9d restore, architecture, engine, asset formats) + REA evidence dossiers per milestone |
 
 **Platform shell — jp.co.drecom.bisque (1 cell = 1 class)** — 9/187 (4.8%)
 
@@ -70,6 +70,18 @@
 🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 ```
 
+**Game-side stage-2 system — libgame.so LOUSER payload (1 cell = 10%)** — 7/10 (70.0%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜
+```
+
+**Game-side driver modules — 0x81·0x8f·0x96·0x9b pseudocode (1 cell = 20 functions, 484 total)** — 24/25 (96.0%)
+
+```text
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨
+```
+
 <sub>Regenerate with `python3 tools/progress.py --write`. Percentages are measured against concrete units (classes, functions, formats, build targets) — never vibes.</sub>
 
 <!-- PROGRESS:END -->
@@ -96,8 +108,39 @@ Unlike Unity/il2cpp titles, OPTC runs on a **bespoke C++ engine**:
   itself**, plus encrypted asset chunks in the APK.
 
 That makes this a *real* native decompilation effort — no low-hanging managed
-code — and it is why the progress wall above is honest about single-digit
-engine percentages.
+code — and it is why the progress wall above tracks engine work in concrete
+units (functions decrypted, symbols recovered, pseudocode committed) rather
+than vibes.
+
+## Where we are — every layer of armor is open
+
+The protection stack has been fully unwrapped, milestone by milestone:
+
+- **M1 — the loader.** `lib__7ffe__.so`'s bootstrap chain and its dword
+  add+XOR stream cipher were reversed, its self-keyed stage-2 protector
+  decrypted — 153,968 bytes of clean ARM64 ([`notes/7ffe-loader.md`](notes/7ffe-loader.md)).
+- **M1b — the crypto core.** The stage-2 AES-256 master key was recovered
+  (FIPS-197 verified); the stream → CBC → tree-LZ pipeline is re-implemented
+  in `tools/stage2_crypto.py`; all four embedded module blobs decrypt 90/90
+  ([`notes/stage2-crypto.md`](notes/stage2-crypto.md)).
+- **M2 — the game-side twin.** `libgame.so` turned out to be a ~35 KB stub
+  wrapped around a 38.5 MB encrypted `LOUSER+0` payload running a *second*
+  instance of the same module system, with its own master key and device
+  registry ([`notes/m2-game-consumer.md`](notes/m2-game-consumer.md)).
+- **M2c — the matryoshka.** That payload unwinds into a **7-level nested
+  container chain** (processors e3→e8, per-level private AES-256 + stream
+  keys) yielding **57 modules with zero chunk failures**
+  (`tools/matryoshka_chain.py`).
+- **M3 — the engine itself.** The last holdout, module **0x9d**, was decrypted
+  with its runtime consumer's keys: **71.6 MB of restored engine `.text`**
+  (12,998 chunks, 0 failures) plus its 6.9 MB patch — and module 0x9e gave
+  back **80,005 function symbols** blanked from the shipped dynsym
+  ([`notes/m3-9d-restore.md`](notes/m3-9d-restore.md)). All four runtime
+  driver modules are pseudocoded in `decomp/game-modules/` (484 functions).
+
+What remains is the fun part: statically resolving the runtime-built PLT,
+reading the engine in the clear, cracking `data1.dat`'s bisque *sinatra*
+cipher — and then the actual clean-room rebuild.
 
 ## Target facts (measured, not guessed)
 
@@ -110,7 +153,7 @@ engine percentages.
 | Java layer | 6 DEX files, 18,364 class defs; game-relevant: `jp.co.drecom.bisque.*` (187 classes) |
 | Native engine | `libgame.so` — AArch64/ARMv7, clang 19.0.1 (`+pgo, +lto, +mlgo`), LLD 19.0.1 |
 | Engine size | `.text` 38.2 MiB ⇒ est. **13,000–26,000 functions** |
-| Hidden data | 39,927,376-byte encrypted blob in an unnamed ELF section of `libgame.so` |
+| Hidden data | 39,927,376-byte encrypted blob in an unnamed ELF section of `libgame.so` — **fully decrypted** (M2c: 7-level chain → 57 modules; M3: 0x9d → 71.6 MB `.text`) |
 | Anti-tamper | `lib__7ffe__.so` + `assets/7ffe/data1.dat` (181,700 B, entropy ≈ 7.98) |
 | API signing | `libsigner.so` (1.1 MB) — request-signing for the game backend |
 | Original signature | v2+v3 RSA/SHA-256, **NAMCO BANDAI Games Inc.** — verified authentic |
@@ -143,18 +186,26 @@ per-method dossiers.
 Deep-dives: [`notes/architecture.md`](notes/architecture.md) ·
 [`notes/engine-analysis.md`](notes/engine-analysis.md) ·
 [`notes/7ffe-loader.md`](notes/7ffe-loader.md) ·
+[`notes/stage2-crypto.md`](notes/stage2-crypto.md) ·
+[`notes/m2-game-consumer.md`](notes/m2-game-consumer.md) ·
+[`notes/m3-9d-restore.md`](notes/m3-9d-restore.md) ·
 [`notes/asset-format.md`](notes/asset-format.md)
 
 ## Repository layout
 
 ```text
 ├── PROGRESS.json          progress source of truth (units, not vibes)
-├── tools/                 fetch / extract / unpack-7ffe / keystore / progress
-├── evidence/              REA evidence — inventories, class & method dossiers
-├── notes/                 architecture, engine & asset-format write-ups
+├── tools/                 fetch / extract / unpack-7ffe / stage-2 crypto /
+│                          matryoshka chain / 0x9d restore / keystore / progress
+├── evidence/              REA evidence — inventories, dossiers & per-milestone
+│                          attack JSONs + scripts (M1b, M2, M2b, M2c, M3)
+├── notes/                 7 deep-dives: loader, stage-2 crypto, game consumer,
+│                          0x9d restore, architecture, engine, asset formats
 ├── decomp/                decompiler output (Ghidra pseudocode, per function)
-│   ├── native-loader-7ffe/   277 functions
-│   └── native-signer/        519 functions
+│   ├── native-loader-7ffe/        277 functions
+│   ├── native-loader-7ffe-stage2/ 269 + 67 forced functions
+│   ├── native-signer/             519 functions
+│   └── game-modules/              0x81 · 0x8f · 0x96 · 0x9b — 484 functions
 ├── src/                   clean-room reimplementation ("recomp")
 │   ├── engine/            module registry — one module per decomp module
 │   ├── platform/          sdl2 / web(Emscripten) / null backends
@@ -228,26 +279,25 @@ Reproduce the full unpack with `tools/extract_apkm.sh` and
 | Acquisition | [tgkit](https://github.com/Ali-F-Harandi/tgkit) (MTProto) |
 | Orchestration & evidence | [rea — Reverse Engineer Anything](https://github.com/morluto/rea) 6.8.0 |
 | Java/DEX | JADX 0.7.1 (headless) |
-| Native ELF | Ghidra 12.1.4 |
+| Native ELF | Ghidra 11.3.2 & 12.1.4 (headless) |
 | Resources | apktool 2.12.1 |
 | Static inventory | readelf/strings/BinWalk pipelines (`tools/`) |
 
-## Roadmap
+## Milestones & roadmap
 
-1. **M0 — skeleton** ✅ engine registry + 3 build targets + own signing key
-2. **M1 — loader defeat** ✅ **core done**: bootstrap chain reversed, cipher
-   (dword add+XOR stream) recovered, self-keyed header cracked, stage-2
-   protector module (153,968 B of valid ARM64) decrypts cleanly —
-   see [`notes/7ffe-loader.md`](notes/7ffe-loader.md) and
-   `tools/unpack_7ffe.py`
-   - **M1b — open**: stage-2 holds the `data1.dat` key/algorithm; decompile
-     the decrypted module to finish the asset unlock
-3. **M2 — asset pipeline**: parse the 39.9 MB engine blob + `.DAT/.idx/.vb`
-   chunk format (already mapped: `notes/asset-format.md`)
-4. **M3 — JNI table**: walk `JNI_OnLoad`/`RegisterNatives` → full Java-facing
-   engine API
-5. **M4 — renderer**: GLES2 scene graph reimplementation (biggest module)
-6. **M5 — gameplay**: battle system, then everything else, block by block
+| Stage | Status | What landed |
+|---|---|---|
+| **M0 — skeleton** | ✅ | engine registry + 3 build targets + own signing key |
+| **M1 — loader defeat** | ✅ | bootstrap chain reversed; stage-1 stream cipher recovered; stage-2 protector decrypted (153,968 B ARM64) — [`notes/7ffe-loader.md`](notes/7ffe-loader.md) |
+| **M1b — crypto core** | ✅ | AES-256 master key recovered; stream→CBC→tree-LZ re-implemented; 4 embedded modules 90/90; patch-merge 0x11b4/0x3188 reversed — [`notes/stage2-crypto.md`](notes/stage2-crypto.md) |
+| **M2 — game consumer** | ✅ | twin stage-2 system found in `libgame.so` `LOUSER+0` and decrypted; 4 game modules 5/5+25/25+8/8 — [`notes/m2-game-consumer.md`](notes/m2-game-consumer.md) |
+| **M2b — data1.dat cryptanalysis** | ✅ | exhaustive 2^32 key sweep (0 hits) + ciphertext-only analysis: cipher is 16-bit-granular, bisque-side, not protector-side |
+| **M2c — matryoshka chain** | ✅ | 38.5 MB blob → 7 nested levels (e3→e8) → **57 modules, 0 failures** — `tools/matryoshka_chain.py` |
+| **M3 — engine `.text` restore** | ✅ | 0x9d decrypted via consumer 0x9b (71.6 MB, 12,998 chunks, 0 fail) + 6.9 MB patch; 80,005 symbols from 0x9e; data1.dat consumer chain mapped — [`notes/m3-9d-restore.md`](notes/m3-9d-restore.md) |
+| **M3b — static PLT + data1.dat key** | 🔶 next | resolve the 272 runtime PLT trampolines → decompile `NtyReader`/sinatra decoders → recover the `7ffe/data1.dat` key |
+| **M4 — JNI table** | ⬜ | walk the hidden module system's Java-facing API surface |
+| **M5 — renderer** | ⬜ | GLES2 scene graph reimplementation (biggest module) |
+| **M6 — gameplay** | ⬜ | battle system, then everything else, block by block |
 
 ## Legal
 
@@ -264,8 +314,9 @@ are committed to this repository (see `.gitignore`).
 Pick a white block from the wall:
 
 1. `python3 tools/progress.py` — see every module and its units
-2. claim a class (Bisque shell) or a function range (loader/signer pseudocode
-   is already in `decomp/` — pick a `FUN_*.c` and turn it into real C in `src/`)
+2. claim a class (Bisque shell) or a function range (loader / signer /
+   game-module pseudocode is already in `decomp/` — pick a `FUN_*.c` and turn
+   it into real C in `src/`)
 3. open a PR; update `PROGRESS.json` — the wall regenerates itself
    (`python3 tools/progress.py --write`)
 
