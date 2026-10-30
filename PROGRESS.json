@@ -42,7 +42,7 @@
    "name": "Engine core — libgame.so",
    "done": 70,
    "weight": 20,
-   "note": "M3c: sinatra consumer chain mapped end-to-end AND statically executable — decoder factory 0x1ef3750 (volume-entry flags -> SD159/SD144/SD40SE/Plane), all 3 cipher cores Unicorn-emulated (custom-AES-192 0x39d3300, CAST-128-style 0x39d4508, RC4 with 255-B periodic reload — M3b's sentinel semantics corrected), key expansion emulated, NTY header format (BE fields) + volume acquisition (seek/clip/wrap) + GlobalNtyPool local-cache path scheme root/%02X/name@version all reversed. data1.dat volume key proven NOT static (55K rodata strings swept, 0 hits). Next: M3d — cache write path + APU per-volume keydescs."
+   "note": "0x9d engine code restored+relocated; GNP/cache/NTY cluster fully decompiled (55 fns); sinatra cipher family emulated; parse_NTY runs under Unicorn"
   },
   {
    "id": "engine-graphics",
@@ -61,9 +61,9 @@
   {
    "id": "asset-formats",
    "name": "Asset formats & pipelines",
-   "done": 80,
+   "done": 85,
    "weight": 12,
-   "note": "M3c: NTY container format reversed (BE header fields, per-volume {offset,size,mode,flags} entries, 32-B-block decode loop, 255-B framing for SD40SE); the game reads a LOCAL-CACHE copy (root/%02X/name@version) created on cache miss — that write path is the remaining data1.dat decryptor (M3d-1). All 3 embedded keys x 3 emulated cores negative; per-volume APU keydesc or server bq159_key remains."
+   "note": "NTY container format decoded from emulation ground truth (MM magic, volume entries, gzip flag); encrypted-NTY key-record mechanism reversed; cache write path (decryptWriteCache) mapped end-to-end"
   },
   {
    "id": "build-android",
@@ -91,7 +91,7 @@
    "name": "Tooling & CI",
    "done": 75,
    "weight": 6,
-   "note": "unpacker + stage-2 crypto + 7-level matryoshka decryptor + 0x9d restorer + PLT resolver + RTTI explorer + sinatra crypto reimpl + Ghidra symbol/PLT/thunk scripts (tools/m3b_*, tools/ghidra-m3b/) + M3c Unicorn emulation harness & consumer-chain toolset (tools/m3c_emu.py, m3c_matrix.py, m3c_keysweep.py, m3c_pltmap.py, m3c_dag.py, m3c_gotsites.py …) + 3-OS CI matrix + Pages deploy"
+   "note": "7-layer chain + 0x9d restore + PLT map + RTTI + Unicorn harnesses (crypto cores AND full NTY parse w/ mini-libc); Ghidra headless pipeline committed"
   },
   {
    "id": "docs",
@@ -231,6 +231,14 @@
    "evidence": "evidence/m3c-consumer-chain.json",
    "notes": "notes/m3c-consumer-chain.md",
    "tools": "tools/m3c_emu.py"
+  },
+  {
+   "id": "M3d",
+   "title": "Cache write path = the real data1.dat decoder",
+   "status": "done",
+   "percent": 100,
+   "summary": "Full workspace rebuilt from a verified uptodown XAPK (all sha256 match); 55-function Ghidra decompile of the GNP/cache cluster; NTY format ground truth via Unicorn parse emulation (MM magic, 21 RES.DAT.00 volumes); decryptWriteCache 0x1f1c914 = the real decoder (class-bit decoders + gzip path); encrypted-NTY key-record mechanism (sigInstall 0x39dea94: 36-byte signature doubles as the 32-byte RC4-255 key, mode 0x40000000, crc-verified re-parse); M3c oracle bug found and fixed (it rejected the true 'MM' magic); 4 new key candidates discovered; corrected sweeps still negative => the data1.dat key is a runtime APU-table signature (capture point documented)"
   }
- ]
+ ],
+ "overall_percent": 48.8
 }

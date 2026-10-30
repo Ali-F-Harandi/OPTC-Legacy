@@ -1,0 +1,332 @@
+[
+ {
+  "addr": "0x01ef0604",
+  "name": "GlobalNtyPool_createLocalCache",
+  "file": "decomp/game-code/m3d-cache/01ef0604_GlobalNtyPool_createLocalCache.c",
+  "sha256": "631165d6e80c6f51"
+ },
+ {
+  "addr": "0x01ef0580",
+  "name": "createLocalCache_wrap",
+  "file": "decomp/game-code/m3d-cache/01ef0580_createLocalCache_wrap.c",
+  "sha256": "fdf7b88cb570d00a"
+ },
+ {
+  "addr": "0x01ef07a8",
+  "name": "createCacheFromList_wrap2",
+  "file": "decomp/game-code/m3d-cache/01ef07a8_createCacheFromList_wrap2.c",
+  "sha256": "5cfa5937a20d9125"
+ },
+ {
+  "addr": "0x01ef082c",
+  "name": "createCacheFromList_wrap",
+  "file": "decomp/game-code/m3d-cache/01ef082c_createCacheFromList_wrap.c",
+  "sha256": "dbe99ce34a1c14a1"
+ },
+ {
+  "addr": "0x01ef1588",
+  "name": "GlobalNtyPool_createCacheFromList",
+  "file": "decomp/game-code/m3d-cache/01ef1588_GlobalNtyPool_createCacheFromList.c",
+  "sha256": "40ac737691b93242"
+ },
+ {
+  "addr": "0x01ef1784",
+  "name": "findVolumeIndexByName",
+  "file": "decomp/game-code/m3d-cache/01ef1784_findVolumeIndexByName.c",
+  "sha256": "d57f3031fd6adc05"
+ },
+ {
+  "addr": "0x01ef0d18",
+  "name": "extractToMemory",
+  "file": "decomp/game-code/m3d-cache/01ef0d18_extractToMemory.c",
+  "sha256": "f84de6f1393426d8"
+ },
+ {
+  "addr": "0x01ef0e20",
+  "name": "memoryStreamFromBuf",
+  "file": "decomp/game-code/m3d-cache/01ef0e20_memoryStreamFromBuf.c",
+  "sha256": "677b2506561574ee"
+ },
+ {
+  "addr": "0x01ef48b8",
+  "name": "NtyReader_ctor",
+  "file": "decomp/game-code/m3d-cache/01ef48b8_NtyReader_ctor.c",
+  "sha256": "9318b73f811a9a12"
+ },
+ {
+  "addr": "0x01ef3750",
+  "name": "BQ1597_decoderFactory",
+  "file": "decomp/game-code/m3d-cache/01ef3750_BQ1597_decoderFactory.c",
+  "sha256": "07d45e7a3fd461a7"
+ },
+ {
+  "addr": "0x01ef34bc",
+  "name": "volumeAcquire_wrap",
+  "file": "decomp/game-code/m3d-cache/01ef34bc_volumeAcquire_wrap.c",
+  "sha256": "fb70f9428cae54ef"
+ },
+ {
+  "addr": "0x01ef4338",
+  "name": "blockCodec32",
+  "file": "decomp/game-code/m3d-cache/01ef4338_blockCodec32.c",
+  "sha256": "571f8557a77aebe4"
+ },
+ {
+  "addr": "0x039d39f4",
+  "name": "keyExpansion_39d39f4",
+  "file": "decomp/game-code/m3d-cache/039d39f4_keyExpansion_39d39f4.c",
+  "sha256": "c892f09f5709c5ac"
+ },
+ {
+  "addr": "0x039d3fd0",
+  "name": "keySpecFromDesc_39d3fd0",
+  "file": "decomp/game-code/m3d-cache/039d3fd0_keySpecFromDesc_39d3fd0.c",
+  "sha256": "6c1f765d444744f2"
+ },
+ {
+  "addr": "0x039dda24",
+  "name": "NtyReader_open",
+  "file": "decomp/game-code/m3d-cache/039dda24_NtyReader_open.c",
+  "sha256": "e8582b676b3ad9ba"
+ },
+ {
+  "addr": "0x039ddab4",
+  "name": "parse_NTY",
+  "file": "decomp/game-code/m3d-cache/039ddab4_parse_NTY.c",
+  "sha256": "236197c8deb1a387"
+ },
+ {
+  "addr": "0x039de16c",
+  "name": "readVolumeEntry",
+  "file": "decomp/game-code/m3d-cache/039de16c_readVolumeEntry.c",
+  "sha256": "11ffba3a9a2883c4"
+ },
+ {
+  "addr": "0x039de5d0",
+  "name": "parseVolume",
+  "file": "decomp/game-code/m3d-cache/039de5d0_parseVolume.c",
+  "sha256": "cf070cb8d8955fdb"
+ },
+ {
+  "addr": "0x039def6c",
+  "name": "volumeAcquire_39def6c",
+  "file": "decomp/game-code/m3d-cache/039def6c_volumeAcquire_39def6c.c",
+  "sha256": "0530f3892f966e7a"
+ },
+ {
+  "addr": "0x039df238",
+  "name": "wrapVolumeStream",
+  "file": "decomp/game-code/m3d-cache/039df238_wrapVolumeStream.c",
+  "sha256": "07bbc4d203ea9236"
+ },
+ {
+  "addr": "0x039f3a88",
+  "name": "IO_FileStream_open",
+  "file": "decomp/game-code/m3d-cache/039f3a88_IO_FileStream_open.c",
+  "sha256": "23bff7aa670af5a1"
+ },
+ {
+  "addr": "0x039f3884",
+  "name": "FileSystem_getter",
+  "file": "decomp/game-code/m3d-cache/039f3884_FileSystem_getter.c",
+  "sha256": "80ac8f017e90e126"
+ },
+ {
+  "addr": "0x039f544c",
+  "name": "BQFileStream_read",
+  "file": "decomp/game-code/m3d-cache/039f544c_BQFileStream_read.c",
+  "sha256": "8799e67a27a3ddd1"
+ },
+ {
+  "addr": "0x039fec20",
+  "name": "gnpInstallKeyRegion",
+  "file": "decomp/game-code/m3d-cache/039fec20_gnpInstallKeyRegion.c",
+  "sha256": "73f72bfab88b8197"
+ },
+ {
+  "addr": "0x039ff304",
+  "name": "gnpA",
+  "file": "decomp/game-code/m3d-cache/039ff304_gnpA.c",
+  "sha256": "2dd722f3cb282227"
+ },
+ {
+  "addr": "0x039ff360",
+  "name": "gnpB",
+  "file": "decomp/game-code/m3d-cache/039ff360_gnpB.c",
+  "sha256": "d59114e05ef4931d"
+ },
+ {
+  "addr": "0x039ff688",
+  "name": "gnpC",
+  "file": "decomp/game-code/m3d-cache/039ff688_gnpC.c",
+  "sha256": "772edf621d0210d4"
+ },
+ {
+  "addr": "0x039ff728",
+  "name": "gnpD",
+  "file": "decomp/game-code/m3d-cache/039ff728_gnpD.c",
+  "sha256": "a98335f62f2a51dc"
+ },
+ {
+  "addr": "0x039ff7b8",
+  "name": "gnpE",
+  "file": "decomp/game-code/m3d-cache/039ff7b8_gnpE.c",
+  "sha256": "20ac6ffb501427ca"
+ },
+ {
+  "addr": "0x039ff9f0",
+  "name": "gnpF",
+  "file": "decomp/game-code/m3d-cache/039ff9f0_gnpF.c",
+  "sha256": "7824e2670008f4d4"
+ },
+ {
+  "addr": "0x039ffd9c",
+  "name": "gnpG",
+  "file": "decomp/game-code/m3d-cache/039ffd9c_gnpG.c",
+  "sha256": "84b77b6f42a43451"
+ },
+ {
+  "addr": "0x039ffef4",
+  "name": "gnpH",
+  "file": "decomp/game-code/m3d-cache/039ffef4_gnpH.c",
+  "sha256": "c31cd97b93354385"
+ },
+ {
+  "addr": "0x03a00110",
+  "name": "gnpI",
+  "file": "decomp/game-code/m3d-cache/03a00110_gnpI.c",
+  "sha256": "f2b706aad5fae4cf"
+ },
+ {
+  "addr": "0x03a00290",
+  "name": "gnpFactoryCaller",
+  "file": "decomp/game-code/m3d-cache/03a00290_gnpFactoryCaller.c",
+  "sha256": "6a1b279eabe2db22"
+ },
+ {
+  "addr": "0x03a00388",
+  "name": "GlobalNtyPool_findVolumeByName_v2",
+  "file": "decomp/game-code/m3d-cache/03a00388_GlobalNtyPool_findVolumeByName_v2.c",
+  "sha256": "a37113509b24b294"
+ },
+ {
+  "addr": "0x03a006f4",
+  "name": "GlobalNtyPool_openReadable",
+  "file": "decomp/game-code/m3d-cache/03a006f4_GlobalNtyPool_openReadable.c",
+  "sha256": "f4dddaf775baf0c5"
+ },
+ {
+  "addr": "0x03a00a58",
+  "name": "GlobalNtyPool_findCacheDescriptor",
+  "file": "decomp/game-code/m3d-cache/03a00a58_GlobalNtyPool_findCacheDescriptor.c",
+  "sha256": "f0a3d10a35bc9bee"
+ },
+ {
+  "addr": "0x03a00c30",
+  "name": "gnpGetVersionByAPU",
+  "file": "decomp/game-code/m3d-cache/03a00c30_gnpGetVersionByAPU.c",
+  "sha256": "86ea02bf680893de"
+ },
+ {
+  "addr": "0x03a00d00",
+  "name": "gnpJ",
+  "file": "decomp/game-code/m3d-cache/03a00d00_gnpJ.c",
+  "sha256": "c94dcd61a9810970"
+ },
+ {
+  "addr": "0x03a010f0",
+  "name": "gnpK",
+  "file": "decomp/game-code/m3d-cache/03a010f0_gnpK.c",
+  "sha256": "4f7979ba11c3fff0"
+ },
+ {
+  "addr": "0x03a01290",
+  "name": "gnpL",
+  "file": "decomp/game-code/m3d-cache/03a01290_gnpL.c",
+  "sha256": "9b410e011a58b8b5"
+ },
+ {
+  "addr": "0x03a01430",
+  "name": "gnpM",
+  "file": "decomp/game-code/m3d-cache/03a01430_gnpM.c",
+  "sha256": "ce72225f2bd863db"
+ },
+ {
+  "addr": "0x03a01530",
+  "name": "gnpN",
+  "file": "decomp/game-code/m3d-cache/03a01530_gnpN.c",
+  "sha256": "fb1faefa753b56c6"
+ },
+ {
+  "addr": "0x03a01730",
+  "name": "gnpO",
+  "file": "decomp/game-code/m3d-cache/03a01730_gnpO.c",
+  "sha256": "adedd4792c1dac0e"
+ },
+ {
+  "addr": "0x03a01820",
+  "name": "gnpP",
+  "file": "decomp/game-code/m3d-cache/03a01820_gnpP.c",
+  "sha256": "2ef203ac22d43dbc"
+ },
+ {
+  "addr": "0x03a030bc",
+  "name": "gnpQ",
+  "file": "decomp/game-code/m3d-cache/03a030bc_gnpQ.c",
+  "sha256": "7824bc0b308e9f5c"
+ },
+ {
+  "addr": "0x03a0332c",
+  "name": "gnpR",
+  "file": "decomp/game-code/m3d-cache/03a0332c_gnpR.c",
+  "sha256": "dd7dd6160841a693"
+ },
+ {
+  "addr": "0x03a05958",
+  "name": "NtyCache_stream_openOrCreate",
+  "file": "decomp/game-code/m3d-cache/03a05958_NtyCache_stream_openOrCreate.c",
+  "sha256": "8839e99736781737"
+ },
+ {
+  "addr": "0x03a05e1c",
+  "name": "formatCachePath",
+  "file": "decomp/game-code/m3d-cache/03a05e1c_formatCachePath.c",
+  "sha256": "e6133c82ce755377"
+ },
+ {
+  "addr": "0x03a061ac",
+  "name": "lookupReadablePath_wrap",
+  "file": "decomp/game-code/m3d-cache/03a061ac_lookupReadablePath_wrap.c",
+  "sha256": "de25de5c0a0981b9"
+ },
+ {
+  "addr": "0x03a061f0",
+  "name": "GlobalNtyPool_lookupReadablePath",
+  "file": "decomp/game-code/m3d-cache/03a061f0_GlobalNtyPool_lookupReadablePath.c",
+  "sha256": "5bc4d3e567b04d25"
+ },
+ {
+  "addr": "0x03a09e94",
+  "name": "mapLookup",
+  "file": "decomp/game-code/m3d-cache/03a09e94_mapLookup.c",
+  "sha256": "5e73532b47b21fe5"
+ },
+ {
+  "addr": "0x03a0de74",
+  "name": "gnpS",
+  "file": "decomp/game-code/m3d-cache/03a0de74_gnpS.c",
+  "sha256": "ca5b24f0bef00151"
+ },
+ {
+  "addr": "0x03a07e00",
+  "name": "ntyOpenCaller1",
+  "file": "decomp/game-code/m3d-cache/03a07e00_ntyOpenCaller1.c",
+  "sha256": "295bc75fd55c3a13"
+ },
+ {
+  "addr": "0x03a08a00",
+  "name": "ntyOpenCaller2",
+  "file": "decomp/game-code/m3d-cache/03a08a00_ntyOpenCaller2.c",
+  "sha256": "7ec5999225f0048c"
+ }
+]

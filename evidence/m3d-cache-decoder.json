@@ -1,0 +1,64 @@
+{
+ "milestone": "M3d",
+ "subject": "the cache write path — the REAL data1.dat decoder chain, reversed end-to-end",
+ "ntty_format_ground_truth": {
+  "method": "full Unicorn emulation of parse_NTY (0x39ddab4) on the plaintext RES.DAT.00 with a fake IO::Stream (tools/m3d_emu_nty_full.py)",
+  "header": "BE fields: u16 magic 0x4d4d 'MM', u16 0x002a, u32 = volume-data end / metadata offset, u16 = volume count, u32",
+  "volume_entry_fields": {
+   "+0x250": "name char*",
+   "+0x25c": "u32 flags (0x80000000 plain resource, 0xc0000000 gzip-wrapped)",
+   "+0x25f": "flags top byte — bit 0x40 = GZIP (GzStreamInflater path)",
+   "+0x260": "u32 class-bits (0x4 png-ish, 0x10004 ssd/textClipping)",
+   "+0x264": "index",
+   "+0x268": "data offset",
+   "+0x26c": "data size",
+   "+0x270": "mode (0..15)",
+   "+0x274": "u32 cache stamp A (custom hash, not crc32/adler)",
+   "+0x288": "u32 cache stamp B (gzip volumes only)"
+  },
+  "res_dat00_volumes": 21,
+  "sample_names": ["ArialBM.png", "GDPR_read_more_ko.png", "common_button_brown_long.png", "loading_world_anim_en.ssd", "ng.textClipping", "opening_movie_6th_mainvisual_iphoneX.png"]
+ },
+ "cache_write_path": {
+  "decryptWriteCache": "0x1f1c914 — volume acquire (0x39def6c flags=2) -> decoderFromKeydesc(0x1f1cc78) -> 8KB decrypt loop -> write to the cache stream (open flags 0x2c000000); flags-byte-0x40 volumes decode via GzStreamInflater (vtable 0x414a858) instead",
+  "cache_layout": "root = GNPCACHE, dir = %02X (top nibble of the 31-rolling-hash of the name), file = name@version ('%s/%02X/%s@%s' @0x1365885)",
+  "cache_stamp": "0x39e4464(path, global 0x41b61b0) compared against entry+0x274 (or +0x288 for gzip volumes) to decide re-creation",
+  "keydesc_flow": "NtyCacheDescriptor {NtyReader ctx@+8, flag@+0x18, keydesc@+0x20} -> decoderFromKeydesc reads keydesc+8 -> 0x39d3fd0 keySpecFromDesc -> BQ1599BisqueKey (vtable 0x3fd6b48) -> decoder class by class-bits (Plane/159/144/40SE)"
+ },
+ "encrypted_nty_key_record": {
+  "installer": "sigInstall 0x39dea94 (called from parse_NTY via PLT 0x3fa2af0 with NtyReader::open's 3rd arg)",
+  "record_layout": "{u32 id@+0, sig[0x24]@+4, u32 payload_len@+0x28, u32 crc32@+0x2c, u32 @+0x30, encrypted NTY payload@+0x34}",
+  "mechanism": "the record's 36-byte signature doubles as the key: keyExpand(ctx+0x457, 0x20 bytes, mode 0x40000000) -> RC4-255 decrypt of record+0x34 (payload_len bytes) -> crc32 verify -> destroy the ctx volume list -> re-parse the NTY from the decrypted buffer",
+  "signature_check": "the caller-supplied record must match the NTY-embedded record (5 qword/dword fields); ntyOpenCaller2 (0x3a08a00) also memcmp's a 0x24-byte key signature at NtyReader ctx+0x28"
+ },
+ "oracle_correction": {
+  "old_m3c_oracle": "u16@0 <= 0x400 — REJECTS the true magic 0x4d4d (19789); every prior key sweep was testing against an impossible oracle",
+  "correct_oracle": "pt[0:4] == 'MM\\x00\\x2a' and u16@8 (volume count) sane",
+  "plaintext_references": ["RES.DAT.00", "FONT.DAT.00", "RES_LOADING.DAT.00 (MM-headed, count=1)"]
+ },
+ "key_candidates_found": {
+  "source": "string-pointer table region 0x4210000-0x4220000 (the version-descriptor table)",
+  "known_3": ["vuyWQSjlknpJF54ib36txVse", "QZbidYS5LulOhQfbXJPVR5FG", "JGcu2DjohFm84viZHe1Et5Qt"],
+  "new_4": ["nyT006FiJkef5FE0E1daXePZdm0o9fMz (32ch)", "lox8YgVv31ttFRVAZ1OSJ2sjZFk3L1zr (32ch)", "PCRdp4BGwaygzUa0WJJXTX3nxzRjgVN5P72uZyUs (40ch)", "smqiXDxYl5Xis2rfhIEsxOkQD (26ch)"],
+  "addresses": {"nyT006FiJkef5FE0E1daXePZdm0o9fMz": "0x4213fe8", "lox8YgVv31ttFRVAZ1OSJ2sjZFk3L1zr": "0x4214148", "PCRdp4BGwaygzUa0WJJXTX3nxzRjgVN5P72uZyUs": "0x4214150", "smqiXDxYl5Xis2rfhIEsxOkQD": "0x4214128"}
+ },
+ "negative_results": {
+  "sweeps": "7 keys x {RC4-255, cipher159, cipher144} x {mode 0xE0000000, 0x40000000} x offsets {0,4,0x34} on data1.dat/RES.DAT.01/FONT.DAT.01 with the corrected MM oracle — 0 hits",
+  "string_sweeps": "134,083 strings (rodata 55k + all DEX 78k) x RC4-255 x offsets {0,4} x corrected oracle — 0 hits",
+  "uuid_keys": "RES/FONT .vb UUIDs and .idx hashes as keys — negative",
+  "lcg16": "16-bit LCG stream solved from the 'MM' known-plaintext — decrypt body stays random — negative",
+  "f274_hash": "not crc32/adler32 of the volume data (custom hash 0x39e4464 family)"
+ },
+ "cipher_family_split": {
+  "data1.dat": "preserves positional byte bias (even-byte low-2-bits 0.326/0.197/0.232/0.244; even-zero 0.011 = same as a real NTY) -> STREAM cipher (RC4-255 family)",
+  "RES.DAT.01_FONT.DAT.01_RES_LOADING.01": "fully uniform (no positional bias) -> BLOCK cipher (cipher159/144 family)"
+ },
+ "apu_table_status": {
+  "static": "the 0x4203e30 region is the own-function GOT stretch holding the GNP method cluster (0x3a00110, 0x3a00388, 0x3a030bc, 0x3a0332c, 0x3a0de74...); the per-volume keydescs are RUNTIME-registered via the module registry / JNI from outside the 0x9d image — not statically enumerable",
+  "runtime_capture_point": "hook 0x39d39f4 (keyExpansion) on device: the data1.dat keydesc arrives as (key=32-byte signature, len=0x20, mode=0x40000000); alternatively dump the keydesc at NtyCacheDescriptor+0x20"
+ },
+ "recovery": {
+  "note": "the full workspace was rebuilt from scratch this session: uptodown XAPK (140.9MB, all 5 sha256 match hashes.txt) -> 7ffe payload -> matryoshka chain (57 modules, 0 fail) -> 0x9d merged.bin (12998 chunks, 288942 relocs) -> plt.tsv (44568 stubs)",
+  "ghidra": "11.3.2 headless, -noanalysis + M3dPrep.java (region disasm + 64482 strings + 56 functions) -> 55-function decompile of the GNP/cache cluster"
+ }
+}
