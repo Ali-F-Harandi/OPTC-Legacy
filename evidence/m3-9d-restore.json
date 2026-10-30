@@ -1,0 +1,57 @@
+{
+ "stage": "M3",
+ "target": "module 0x9d (level-6 raw, 31.7 MB stored / 0x1EAFC10)",
+ "result": "FULLY DECRYPTED",
+ "consumer_module": "0x9b (init 0x2f68 -> FUN_00002910)",
+ "keys": {
+  "g": "0x129E7AF1",
+  "entry_codec": "m1=(g+0xD3E87144)*g; m2=m1+g*0x0BD9418D; dec[j]=(raw[j]-(m1<<4*(j&1)))^(m2>>((g+4j)&7))",
+  "stream_key": "0x39BC",
+  "stream_seed": "0x2A108682",
+  "aes_schedule": "0x9b+0x2021C (240 B)"
+ },
+ "module": {
+  "total": "0x446FCC8",
+  "chunks": 16,
+  "entries_ok": 12998,
+  "entries_fail": 0
+ },
+ "patch": {
+  "stored_off": "0x1D37694",
+  "total": "0x6A3C4B",
+  "entries_ok": 2168,
+  "entries_fail": 0,
+  "imports_unique": 425,
+  "relocs": {
+   "0x403": 288942,
+   "0x402": 424,
+   "0x401": 17,
+   "0x101": 29
+  }
+ },
+ "layout": {
+  "zeros_elf_space": "[0,0x1400000)",
+  "strings": "[0x1400000,0x1500000)",
+  "code_arm64": "[0x1C00000,0x4000000)",
+  "got_data": "[0x4000000,0x4230000)",
+  "bss": "[0x4230000,0x446FCC8)"
+ },
+ "addr_space": "module offsets == libgame.so virtual addresses (.text overlay)",
+ "symbols_from_9e": 80005,
+ "data1_dat": {
+  "name_found_anywhere": false,
+  "encodings_tested": [
+   "plain",
+   "xor1",
+   "add1",
+   "reversed",
+   "utf16",
+   "obf-contig",
+   "obf-movz/movk"
+  ],
+  "dex_const_string_refs": 0,
+  "key_9b_aes_test": "negative (entropy unchanged)",
+  "key_9b_stream_test": "negative",
+  "conclusion": "path is runtime-derived from the build-randomized 7ffe tag; consumption via 0x8f APK-open + e1 ZIP reader + bisqueBase NtyReader/BQ1599 sinatra decoder family"
+ }
+}

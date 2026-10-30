@@ -5,7 +5,7 @@
 [![build](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/build.yml/badge.svg)](../../actions)
 [![deploy-web](https://github.com/Ali-F-Harandi/OPTC-Legacy/actions/workflows/deploy-pages.yml/badge.svg)](../../actions/workflows/deploy-pages.yml)
 [![play](https://img.shields.io/badge/play-web%20build%20%28WASM%29-6ea8ff?logo=githubpages&logoColor=white)](https://ali-f-harandi.github.io/OPTC-Legacy/)
-[![progress](https://img.shields.io/badge/decompilation-25.2%25-blue)](PROGRESS.json)
+[![progress](https://img.shields.io/badge/decompilation-32.4%25-blue)](PROGRESS.json)
 [![target](https://img.shields.io/badge/target-16.2.1%20%221621%22-critical)](hashes.txt)
 [![license](https://img.shields.io/badge/legal-clean--room%20RE-important)](#legal)
 
@@ -15,7 +15,7 @@
 
 ### 🧱 Decompilation Wall
 
-**Overall — 26.1% decompiled & rebuilt**
+**Overall — 32.4% decompiled & rebuilt**
 
 ```text
 ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  26.1%
@@ -26,12 +26,12 @@
 | Artifact acquisition (tgkit/MTProto) | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 134.6 MB APKM pulled over MTProto, SHA-256 pinned in hashes.txt |
 | Packaging & signature analysis | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | 34 splits mapped; v2+v3 RSA/SHA-256 signature verified authentic |
 | Platform shell — Bisque Java layer | `🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 7% | 9 of 187 jp.co.drecom.bisque classes deep-documented (JADX) |
-| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨` 97% | ALL 4 embedded module blobs DECRYPTED (90/90 container entries, zero failures): nested dd70 containers reversed — header formulas, key table = flattened Huffman tree (3B nodes), chunk pipeline eb34(stream)->fc30(CBC floor len>>4)->scatter->tree-LZ; ARM64 verified at init-fn offsets (0xe3+0x23d8 prologue, 0x96+0xe678 init stub); two re-impl traps fixed (32-bit truncation before shifts, counter-based pair shifts). tools/stage2_crypto.py --modules. Remaining: 0x11b4/0x3188 patch merge, raw 0xf3 blob (969KB register-only), data1.dat seed |
+| Anti-tamper loader — lib__7ffe__.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩` 100% | **M3: every layer open.** Stage-1/2 reversed; 7-level matryoshka (f3→f8, processors e3→e8, per-level private keys) → 57 modules, 0 failures; and the last holdout **0x9d decrypted via its runtime consumer 0x9b** (keys g=0x129E7AF1, stream 0x39BC, private AES@0x9b+0x2021C): 71.6 MB of restored engine code (12,998 chunks, 0 fail) + 6.9 MB patch. data1.dat cipher still open (16-bit-granular, bisque sinatra family) |
 | API signer — libsigner.so | `🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜` 85% | 519 functions pseudocoded; request-signing scheme reconstructed |
-| Engine core — libgame.so | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 4% | section/capability map done; 38.2 MiB .text ≈ 13k–26k functions pending |
+| Engine core — libgame.so | `🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨` 32% | **M3: the .text is back.** 0x9d = a libgame .text overlay (module offsets == libgame vaddrs; code [0x1C00000,0x4000000)); 0x9e = the blanked-dynsym restoration DB → **80,005 function symbols recovered** (cocos2d-x, masterdb, litesql, CRIWare, bisque, Quest/Kizuna…); 425 imports incl. AAssetManager_open; PLT stubs runtime-built from 0xb2's 272 trampoline records. Next: static PLT resolution → mass decompile |
 | Renderer (OpenGL ES 2) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | GLES2 confirmed via shell; runtime API table not yet walked |
 | Audio (OpenSLES) | `🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 2% | backend confirmed; mixer/voice graph pending |
-| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 28% | .idx chunk format + 7ffe container format reversed (unpack_7ffe.py); embedded-module container parsed end-to-end (4 ARM64 sub-modules, still encrypted); 39.9 MB engine blob + data1.dat still encrypted |
+| Asset formats & pipelines | `🟩🟩🟩🟩🟩🟩🟩🟩🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨` 40% | 7-level matryoshka chain + 0x9d module format reversed; **data1.dat consumer chain mapped**: 0x8f APK finder (/proc/self/maps → split table → openat .apk) + e1 ZIP parser (EOCD/CD walk, ×31 name hash) + read_zip_entry + bisqueBase NtyReader/BQ1599BisqueKey/BQ15916 sinatraCall decoder family. Name "data1.dat" proven absent everywhere (6 encodings; DEX ids 23589/23590 have 0 const-string refs) — path is runtime-derived from the build-randomized `7ffe` tag |
 | Android custom build | `🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 25% | Gradle + CMake/NDK harness with own v4 keystore (optc-legacy.jks) |
 | Web build (Emscripten/WASM) | `🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 15% | single CMake tree + Emscripten preset & shell ready |
 | Desktop build (SDL2) | `🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜` 30% | null/SDL2 backends compile clean on Linux — smoke-tested |
