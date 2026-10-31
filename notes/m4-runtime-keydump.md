@@ -48,12 +48,12 @@ there), then arms the hooks. No byte-signature scan and no hardcoded slide.
 
 | tool | role |
 |---|---|
-| `tools/m4_frida_keydump.js` | agent: hooks the 4 capture points, dumps keys / sig records / open paths, captures the crypto anchor tables (T1..T4 @0x14f7375…, rounds @0x1464760), optional region dumps (strings 1 MB, full image 71.6 MB) |
-| `tools/m4_frida_run.py` | host runner: spawn/attach, live classification, auto-saves `optc_dump/{keydump.json,T1..T4.bin,rounds.bin,strings.bin[,image.bin]}` |
+| `tools/m4_frida_keydump.js` | agent: hooks the 4 capture points, dumps keys / sig records / open paths, captures the crypto anchor tables (T1..T4 @0x14f7375…, rounds @0x1464760), **and walks the NtyReader ctx on every open (onLeave) to dump the parsed volume table** — the same walk as the M3d Unicorn harness, so the offline extractor needs NO XAPK artifacts; optional region dumps (strings 1 MB, full image 71.6 MB) |
+| `tools/m4_frida_run.py` | host runner: spawn/attach, live classification, auto-saves `optc_dump/{keydump.json,volumes.json,T1..T4.bin,rounds.bin,strings.bin[,image.bin]}` |
 | `tools/m4_decrypt_data1.py` | offline sigInstall: RC4-255 decrypt → crc32 verify → corrected-MM oracle → NTY header report; `--sweep` covers the embedded-record key candidates the M3d matrix never tried |
-| `tools/m4_extract.py` | volume extractor for the decrypted NTY (raw + gzip-inflate + optional RC4-255 for class-bit-1 volumes), manifest.json |
-| `tools/m4_selftest.py` | round-trip proof of the whole offline path (synthetic record + payload) |
-| `tools/m3d_emu_nty_full.py` | UNCHANGED core + new `--json` flag that dumps the parsed volume table for the extractor |
+| `tools/m4_extract.py` | volume extractor for the decrypted NTY (raw + gzip-inflate + optional RC4-255 for class-bit-1 volumes), manifest.json — consumes either `volumes.json` (agent dump) or the emulator's `--json` output |
+| `tools/m4_selftest.py` | round-trip proof of the whole offline path (synthetic record + payload + agent-format volume table) |
+| `tools/m3d_emu_nty_full.py` | UNCHANGED core + `--json` flag; artifacts now configurable via `OPTC_MERGED`/`OPTC_SO`/`OPTC_PLT`/`OPTC_WORK` env vars (secondary path — only needed without a rooted device) |
 
 Key classification in the agent (validated against the mode bits):
 
@@ -75,10 +75,13 @@ nty)` — and proves the offline side end-to-end:
 [PASS] sweep mode finds embedded-record key
 [PASS] wrong-key negative control (exit 2)
 [PASS] keystream period is exactly 255
+[PASS] agent-format volumes.json -> extractor (3 volumes, png+gzip)
 ```
 
-The extractor path was verified separately (synthetic 3-volume NTY:
-raw blob, gzip-wrapped blob, manifest) — all PASS.
+The last check feeds `m4_extract.py` a volumes.json in the exact shape the
+Frida agent's runtime ctx walk produces (png / gzip-wrapped / raw volumes,
+real offsets/sizes/flags/class-bits) and verifies byte-exact extraction —
+so the on-device dump and the offline extractor are format-locked.
 
 ## 5. The untested static hypothesis, now covered
 
@@ -119,13 +122,17 @@ mirror carries 16.2.1 (released 2026-10-29) yet. Consequences:
 # on-device capture (rooted device, frida-server arm64, USB debugging):
 python3 tools/m4_frida_run.py                 # spawn + capture, play to title
 python3 tools/m4_frida_run.py --image         # additionally dump the 71.6 MB image
+# -> optc_dump/{keydump.json, volumes.json, T1..T4.bin, rounds.bin, strings.bin}
 
 # offline (after the capture; data1.dat from the APK or the device):
 python3 tools/m4_decrypt_data1.py --keydump optc_dump/keydump.json \
     --t1 optc_dump/T1.bin --data1 data1.dat
-# -> data1.dec.nty, then the existing parse harness:
-python3 tools/m3d_emu_nty_full.py --json volumes.json data1.dec.nty
-python3 tools/m4_extract.py --nty data1.dec.nty --volumes volumes.json
+# -> data1.dec.nty, then EITHER the runtime volume table (no artifacts needed):
+python3 tools/m4_extract.py --nty data1.dec.nty --volumes optc_dump/volumes.json \
+    --t1 optc_dump/T1.bin --key <key32>
+# OR the Unicorn ground-truth parse (needs the XAPK artifacts):
+OPTC_MERGED=merged.bin OPTC_SO=libgame.so OPTC_PLT=plt.tsv \
+    python3 tools/m3d_emu_nty_full.py --json volumes.json data1.dec.nty
 
 # verification (no device needed):
 python3 tools/m4_selftest.py
@@ -135,11 +142,26 @@ python3 tools/m4_selftest.py
 
 1. run the capture on device; correlate `NtyReader::open` paths with
    sigInstall records to bind each 32-byte signature to its volume
-2. with the key: full decrypt + `m3d_emu_nty_full.py` parse + extraction
-   (the pipeline this milestone wires end-to-end)
+2. with the key: full decrypt + extraction via the runtime volumes.json
+   (the pipeline this milestone wires end-to-end, artifact-free)
 3. same capture for the .01 block-cipher family (RES/FONT/RES_LOADING):
    their keydescs flow through the same keyExpansion hook — the class-bits
    decide cipher159 (custom AES) / cipher144 (CAST) offline
 4. `bq159_key` kv-store (server-issued): check whether first-run cache
    creation works offline from the shipped APK (global key only), which
    would date the signature mechanism
+
+## 9. Session addendum — artifact-free extraction (this session)
+
+The XAPK could still not be re-acquired (private Telegram channel +
+recycled sandbox lost the tgkit credentials), so the extraction step was
+made independent of it: the agent now dumps the volume table by walking
+the live NtyReader ctx (`ctx+0x4a0` head / `+0x4b0` count; node `+8` entry,
+`+0x10` next; entry `+0x250` name / `+0x25c` flags / `+0x260` class-bits /
+`+0x264` idx / `+0x268` offset / `+0x26c` size / `+0x270` mode) — offsets
+cross-verified against BOTH the M3d emulator's `dump_entry` and the
+readVolumeEntry decompile (attribute keys `0x10e` name / `0x111` offset /
+`0x117` size / `0x8827` mode / `0x885c` flags / `0x885e` class-bits).
+`m4_frida_run.py` saves it as `volumes.json` in the m4_extract-compatible
+shape; the selftest format-locks the pair. A ready-to-run capture kit
+(`optc-m4-capture-kit.zip`) ships the five M4 tools + a Persian runbook.

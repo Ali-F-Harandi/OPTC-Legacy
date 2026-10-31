@@ -5,20 +5,44 @@ All import GOT slots that are zero in the static image get magic trampolines:
 common libc functions are implemented in Python; the rest return 0 (logged).
 Usage: python3 m3d8_emu_full.py <file> [more files...]
        python3 m3d8_emu_full.py --json out.json <file>   (M4: volume table dump)
+
+Artifacts (regenerate from the XAPK — notes/m3d-cache-decoder.md §7):
+  OPTC_MERGED  merged.bin  (0x9d image+patch merge; default $OPTC_WORK/m2/9d_module/merged.bin)
+  OPTC_SO      libgame.so (default $OPTC_WORK/apk/arm64_x/lib/arm64-v8a/libgame.so)
+  OPTC_PLT     plt.tsv    (default $OPTC_WORK/m3/plt.tsv)
+  OPTC_WORK    workspace root (default /home/z/my-project/download/re-work)
+
+NOTE: since M4 the Frida agent dumps the volume table at runtime
+(m4_frida_run.py -> volumes.json), so this Unicorn harness is only needed
+when you have the artifacts but no rooted device.
 """
 import json
+import os
 import struct
 import sys
 
-sys.path.insert(0, "/home/z/my-project/re-work/repo-git/tools")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+
+RW = os.environ.get("OPTC_WORK", "/home/z/my-project/download/re-work")
+IMG = os.environ.get("OPTC_MERGED", f"{RW}/m2/9d_module/merged.bin")
+SO = os.environ.get("OPTC_SO", f"{RW}/apk/arm64_x/lib/arm64-v8a/libgame.so")
+PLT = os.environ.get("OPTC_PLT", f"{RW}/m3/plt.tsv")
+for _p, _what in ((IMG, "merged.bin (OPTC_MERGED)"), (SO, "libgame.so (OPTC_SO)"),
+                   (PLT, "plt.tsv (OPTC_PLT)")):
+    if not os.path.isfile(_p):
+        sys.exit(f"[!] missing artifact {_what}: {_p}\n"
+                 "    regenerate it from the XAPK (notes/m3d-cache-decoder.md §7)\n"
+                 "    or set the env var — or skip this tool: m4_frida_run.py now\n"
+                 "    dumps volumes.json on device, no artifacts needed.")
+
 import m3c_emu as E
 
 from unicorn import *
 from unicorn.arm64_const import *
 
-RW = "/home/z/my-project/download/re-work"
-img = open(f"{RW}/m2/9d_module/merged.bin", "rb").read()
-so = open(f"{RW}/apk/arm64_x/lib/arm64-v8a/libgame.so", "rb").read()
+img = open(IMG, "rb").read()
+so = open(SO, "rb").read()
 
 uc = E.uc
 MAGIC_SVC = 0x800000000
@@ -46,7 +70,7 @@ def stub_got(addr):
 
 # map: stub -> import name (from plt.tsv)
 imp_name = {}
-for line in open(f"{RW}/m3/plt.tsv"):
+for line in open(PLT):
     s, k, t = line.rstrip("\n").split("\t")
     if k == "import":
         imp_name[int(s, 16)] = t

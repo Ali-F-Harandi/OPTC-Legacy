@@ -16,6 +16,15 @@
  *              u32 len@+0x28, u32 crc32@+0x2c, u32 @+0x30, payload@+0x34};
  *              record.sig[0:32] IS the RC4-255 key (notes/m3d-cache-decoder.md §4)
  *   0x39dda24  NtyReader::open(this, path, record) — logs which NTY opens
+ *              AND (onLeave) dumps the parsed volume table straight from the
+ *              NtyReader ctx — the SAME in-memory walk the M3d Unicorn harness
+ *              does, so the offline extractor needs NO XAPK artifacts:
+ *                ctx+0x4a0 = volume map head, ctx+0x4b0 = count;
+ *                node+8 = entry(0x290 B), node+0x10 = next
+ *                entry+0x250 name*, +0x25c flags, +0x260 class-bits,
+ *                +0x264 idx, +0x268 offset, +0x26c size, +0x270 mode
+ *              (fields cross-verified: emulator dump_entry ↔ readVolumeEntry
+ *               attribute keys 0x10e/0x885c/0x885e/0x111/0x117/0x8827)
  *
  * Also dumps the crypto anchor tables so the offline decryptor is
  * self-sufficient:
@@ -65,6 +74,7 @@ var DUMP = {
     keys: [],                   // keyExpansion captures
     sig_records: [],            // sigInstall captures
     opens: [],                  // NtyReader::open paths
+    volumes: [],                // per-open parsed volume tables (extractor input)
     notes: []
 };
 var base = null;
@@ -103,6 +113,21 @@ function u32at(p, off) {
     try {
         return Memory.readU32(p.add(off));
     } catch (e) { return null; }
+}
+
+function ptrAt(p, off) {
+    try {
+        return Memory.readPointer(p.add(off));
+    } catch (e) { return null; }
+}
+
+function saneStr(s) {
+    if (!s || s.length < 1 || s.length > 256) return null;
+    for (var i = 0; i < s.length; i++) {
+        var c = s.charCodeAt(i);
+        if (c < 0x20 || c > 0x7e) return null;     // volume names are ASCII
+    }
+    return s;
 }
 
 function classify(keylen, mode) {
@@ -268,30 +293,110 @@ function armHooks() {
         }
     });
 
-    // ---- NtyReader::open(this, path, record) — path may be arg0 or arg1
-    // depending on the exact thunk; pick whichever decodes as a path ----
+    // ---- NtyReader::open(this, path, record) ----
+    // path may sit in arg0 or arg1 depending on the exact thunk; the ctx is
+    // `this` (arg0, member function — Unicorn-verified signature).
+    // onLeave walks the ctx volume map so the offline extractor needs no
+    // XAPK artifacts (same walk as the M3d Unicorn dump_entry).
     Interceptor.attach(pOpen, {
         onEnter: function (args) {
-            var path = null;
-            for (var ai = 0; ai < 2 && !path; ai++) {
+            this.ctx = args[0];
+            this.path = null;
+            for (var ai = 0; ai < 2 && !this.path; ai++) {
                 var s = readCstr(args[ai], 1024);
                 if (s && s.length > 3 && (s.charAt(0) === '/' || s.indexOf('/') >= 0))
-                    path = s;
+                    this.path = s;
             }
+            this.retval_wanted = !args[2].isNull();
             var ev = {
                 ts: new Date().toISOString(),
                 pc: 'NtyReader::open',
-                path: path,
+                path: this.path,
                 arg0_hint: readCstr(args[0], 64),
                 arg1_hint: readCstr(args[1], 64),
                 has_record: !args[2].isNull()
             };
+            this.ev = ev;
             DUMP.opens.push(ev);
-            if (path) log('OPEN', path, ev.has_record ? '(+key record)' : '');
+            if (this.path) log('OPEN', this.path, ev.has_record ? '(+key record)' : '');
+        },
+        onLeave: function (ret) {
+            if (ret && ret.toUInt32 && (ret.toUInt32() & 1) === 0) {
+                // open() returned failure — ctx list is unreliable
+                return;
+            }
+            var t = dumpVolumes(this.ctx, this.path);
+            if (this.ev) this.ev.volumes_dumped = t ? t.volumes.length : 0;
         }
     });
 
     log('hooks armed: keyExpansion + keyExpansionFull + sigInstall + NtyReader::open');
+}
+
+// ---------------- runtime volume-table dump (extractor input) ----------------
+// Walks the NtyReader ctx exactly like tools/m3d_emu_nty_full.py dump_entry:
+//   ctx+0x4a0 head map-node, ctx+0x4b0 count, node+8 entry, node+0x10 next
+//   entry+0x250 name*, +0x25c flags, +0x260 class-bits, +0x264 idx,
+//          +0x268 offset, +0x26c size, +0x270 mode
+function dumpVolumes(ctx, path) {
+    if (ctx === null || ctx === undefined || ctx.isNull && ctx.isNull()) return null;
+    try {
+        var count = u32at(ctx, 0x4b0);
+        if (count === null || count <= 0 || count > 10000) return null;
+        var head = ptrAt(ctx, 0x4a0);
+        if (head === null || head.isNull()) return null;
+        var vols = [];
+        var node = head;
+        var seenNodes = {};
+        for (var i = 0; i < count && node !== null && !node.isNull(); i++) {
+            var key = node.toString();
+            if (seenNodes[key]) break;                 // cycle guard
+            seenNodes[key] = 1;
+            var entry = ptrAt(node, 8);
+            if (entry === null || entry.isNull()) break;
+            var namep = ptrAt(entry, 0x250);
+            var name = namep && !namep.isNull() ? saneStr(readCstr(namep, 256)) : null;
+            var row = {
+                name: name,
+                name_ptr: namep ? namep.toString() : null,
+                flags: u32at(entry, 0x25c),
+                'class-bits': u32at(entry, 0x260),
+                idx: u32at(entry, 0x264),
+                offset: u32at(entry, 0x268),
+                size: u32at(entry, 0x26c),
+                mode: u32at(entry, 0x270),
+                stampA: u32at(entry, 0x274),
+                stampB: u32at(entry, 0x288),
+                entry_ptr: entry.toString()
+            };
+            vols.push(row);
+            node = ptrAt(node, 0x10);
+        }
+        if (vols.length === 0) return null;
+        var rec = {
+            ts: new Date().toISOString(),
+            path: path || ('ctx:' + ctx),
+            ctx: ctx.toString(),
+            count: vols.length,
+            volumes: vols
+        };
+        // dedup: same ctx + same volume signature -> update in place
+        var sig = rec.ctx + '|' + vols.map(function (v) {
+            return (v.name || '') + ':' + (v.offset >>> 0) + ':' + (v.size >>> 0);
+        }).join(',');
+        for (var j = 0; j < DUMP.volumes.length; j++) {
+            if (DUMP.volumes[j]._sig === sig) { DUMP.volumes[j] = rec; rec._sig = sig; return rec; }
+        }
+        rec._sig = sig;
+        DUMP.volumes.push(rec);
+        log('VOLUMES ' + (path || rec.ctx) + ' -> ' + vols.length +
+            ' (first: ' + (vols[0].name || '?') +
+            ' off=' + (vols[0].offset === null ? '?' : '0x' + (vols[0].offset >>> 0).toString(16)) + ')');
+        return rec;
+    } catch (e) {
+        log('volume walk failed: ' + e);
+        return null;
+    }
 }
 
 // ---------------- crypto tables ----------------
@@ -357,7 +462,9 @@ rpc.exports = {
             base: base ? base.toString() : null,
             keys: DUMP.keys.length,
             sig_records: DUMP.sig_records.length,
-            opens: DUMP.opens.length
+            opens: DUMP.opens.length,
+            volume_tables: DUMP.volumes.length,
+            volumes: DUMP.volumes.reduce(function (a, v) { return a + v.count; }, 0)
         };
     },
     getdump: function () {
@@ -389,6 +496,13 @@ rpc.exports = {
         for (var i = 0; i < j.length; i++) jb[i] = j.charCodeAt(i) & 0xFF;
         var p = writeFile('m4_keydump.json', jb.buffer);
         if (p) paths.push(p);
+        var vj = JSON.stringify(DUMP.volumes.map(function (v) {
+            return { file: v.path, volumes: v.volumes };
+        }));
+        var vb = new Uint8Array(vj.length);
+        for (var iv = 0; iv < vj.length; iv++) vb[iv] = vj.charCodeAt(iv) & 0xFF;
+        var pv = writeFile('m4_volumes.json', vb.buffer);
+        if (pv) paths.push(pv);
         ['T1', 'T2', 'T3', 'T4'].forEach(function (n) {
             if (!DUMP.tables || !DUMP.tables[n] || !DUMP.tables[n].hex) return;
             var h = DUMP.tables[n].hex;

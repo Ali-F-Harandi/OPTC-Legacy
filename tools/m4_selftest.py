@@ -12,9 +12,11 @@ payload), then verifies that tools/m4_decrypt_data1.py recovers it:
   5. decrypt with --key            -> must hit (crc + MM + header)
   6. decrypt with --sweep only     -> must find the embedded-record key
   7. negative control: wrong key   -> must NOT hit
+  8. agent-format volumes.json -> m4_extract.py end-to-end
 
 Run:  python3 tools/m4_selftest.py
 """
+import gzip
 import json
 import os
 import random
@@ -40,6 +42,36 @@ def build_nty(rng, n_volumes=3):
     hdr = struct.pack(">HHIH", 0x4D4D, 0x002A, data_end, n_volumes)
     hdr += struct.pack(">I", 0x12345678)                     # trailing u32
     return hdr + body
+
+
+def build_nty_with_table(rng):
+    """Synthetic plaintext NTY whose volume data matches a runtime volume
+    table in the FRIDA AGENT's format (m4_frida_keydump.js dumpVolumes):
+    3 volumes — png / gzip-wrapped / raw — at known absolute offsets."""
+    png = b"\x89PNG\r\n\x1a\n" + bytes(rng.randrange(256) for _ in range(300))
+    raw = bytes(rng.randrange(256) for _ in range(200))
+    gz = gzip.compress(bytes(rng.randrange(256) for _ in range(400)))
+    body = png + raw + gz
+    data_end = 14 + len(body)
+    hdr = struct.pack(">HHIH", 0x4D4D, 0x002A, data_end, 3) + struct.pack(">I", 0)
+    nty = hdr + body
+    off = 14
+    vols = []
+    for name, blob, flags, cbits, mode in (
+            ("ArialBM.png", png, 0x80000000, 0x4, 2),
+            ("ng.textClipping", raw, 0x80000000, 0x10004, 0),
+            ("loading_world_anim_en.ssd", gz, 0xC0000000, 0x10004, 1)):
+        vols.append({
+            "name": name, "name_ptr": "0x7f0000000000",
+            "flags": flags, "class-bits": cbits, "idx": len(vols),
+            "offset": off, "size": len(blob), "mode": mode,
+            "stampA": 0x11223344, "stampB": 0x55667788,
+            "entry_ptr": "0x7f0000010000",
+        })
+        off += len(blob)
+    tables = [{"file": "/data/data/com.namacobandaigames.spmoja010E/files/7ffe/data1.dat",
+               "volumes": vols}]
+    return nty, tables
 
 
 def main():
@@ -124,6 +156,41 @@ def main():
     ok4 = ks_ref[:255] == ks_a and ks_ref[255:] == ks_b
     ok &= ok4
     print(f"[{'PASS' if ok4 else 'FAIL'}] keystream period is exactly 255")
+
+    # ---- 7. agent-format volumes.json -> m4_extract.py end-to-end ----
+    nty2, tables = build_nty_with_table(rng)
+    p_nty2 = os.path.join(tmp, "data1.dec.nty")
+    p_vols = os.path.join(tmp, "volumes.json")
+    out_dir = os.path.join(tmp, "optc_volumes")
+    open(p_nty2, "wb").write(nty2)
+    json.dump(tables, open(p_vols, "w"), indent=1)
+    r4 = subprocess.run(
+        [sys.executable, os.path.join(HERE, "m4_extract.py"),
+         "--nty", p_nty2, "--volumes", p_vols, "--out", out_dir],
+        capture_output=True, text=True)
+    ok5 = r4.returncode == 0
+    got = {f: open(os.path.join(out_dir, f), "rb").read()
+           for f in sorted(os.listdir(out_dir)) if f.endswith(".bin") or f.endswith(".inf")}
+    names = sorted(got)
+    # precise checks: raw blobs byte-exact, gzip volume inflated
+    ok5 &= any(n.startswith("000_ArialBM.png.bin") for n in names)
+    ok5 &= any(n.startswith("001_ng.textClipping.bin") for n in names)
+    ok5 &= any(n.startswith("002_loading_world_anim_en.ssd") for n in names)
+    if "000_ArialBM.png.bin" in got:
+        ok5 &= got["000_ArialBM.png.bin"][:8] == b"\x89PNG\r\n\x1a\n"
+    gz_out = [n for n in names if n.startswith("002_loading") and n.endswith(".inf")]
+    if gz_out:
+        ok5 &= got[gz_out[0]] == gzip.decompress(
+            got["002_loading_world_anim_en.ssd.bin"])
+    man = json.load(open(os.path.join(out_dir, "manifest.json")))
+    ok5 &= len(man["volumes"]) == 3 and all(
+        not v.get("error") for v in man["volumes"])
+    ok &= ok5
+    print(f"[{'PASS' if ok5 else 'FAIL'}] agent-format volumes.json -> extractor "
+          f"(3 volumes, png+gzip, exit {r4.returncode})")
+    if not ok5:
+        print(r4.stdout)
+        print(r4.stderr)
 
     print("\n===== M4 SELFTEST:", "ALL PASS" if ok else "FAILURES", "=====")
     print(f"artifacts in {tmp}")

@@ -14,6 +14,9 @@ with frida-server running, waits for the protector to install the decrypted
 and saves everything to --out (default ./optc_dump/):
   keydump.json     all captures
   T1.bin T2.bin T3.bin T4.bin rounds.bin
+  volumes.json     per-open volume tables (runtime walk of the NtyReader ctx —
+                   the SAME data m3d_emu_nty_full.py --json produces, so
+                   m4_extract.py needs NO XAPK artifacts)
   strings.bin      the [0x1400000,0x1500000) region (volume-name resolution)
   image.bin        optional --image: the full 71.6 MB runtime engine image
 
@@ -104,19 +107,28 @@ def main():
 
     stop = threading.Event()
 
+    def save_all(dump):
+        with open(os.path.join(args.out, "keydump.json"), "w") as f:
+            json.dump(dump, f, indent=1)
+        for n in ("T1", "T2", "T3", "T4", "rounds"):
+            t = (dump.get("tables") or {}).get(n)
+            if t and t.get("hex"):
+                with open(os.path.join(args.out, f"{n}.bin"), "wb") as f:
+                    f.write(bytes.fromhex(t["hex"]))
+        # volume tables -> m4_extract.py-compatible volumes.json
+        vols = dump.get("volumes") or []
+        if vols:
+            tables = [{"file": v.get("path") or v.get("ctx"),
+                       "volumes": v.get("volumes", [])} for v in vols]
+            with open(os.path.join(args.out, "volumes.json"), "w") as f:
+                json.dump(tables, f, indent=1)
+
     def saver():
         # periodically persist keydump.json so nothing is lost on crash
         while not stop.is_set():
             time.sleep(5)
             try:
-                dump = ex.getdump()
-                with open(os.path.join(args.out, "keydump.json"), "w") as f:
-                    json.dump(dump, f, indent=1)
-                for n in ("T1", "T2", "T3", "T4", "rounds"):
-                    t = (dump.get("tables") or {}).get(n)
-                    if t and t.get("hex"):
-                        with open(os.path.join(args.out, f"{n}.bin"), "wb") as f:
-                            f.write(bytes.fromhex(t["hex"]))
+                save_all(ex.getdump())
             except Exception as e:
                 print(f"[!] periodic save failed: {e}")
 
@@ -134,8 +146,9 @@ def main():
                 print(f"[!] agent lost: {e}")
                 break
             if not did_regions and st.get("armed"):
-                print(f"[*] hooks armed (base={st['base']}) — "
-                      f"keys={st['keys']} sig_records={st['sig_records']} opens={st['opens']}")
+                print(f"[*] hooks armed (base={st['base']}) — keys={st['keys']} "
+                      f"sig_records={st['sig_records']} opens={st['opens']} "
+                      f"volume_tables={st.get('volume_tables', 0)}")
                 try:
                     r = ex.dumpregion("strings")
                     print(f"[*] strings region: {r}")
@@ -146,9 +159,10 @@ def main():
                 except Exception as e:
                     print(f"[!] region dump failed: {e}")
                 did_regions = True
-            if st.get("keys") or st.get("sig_records"):
+            if st.get("keys") or st.get("sig_records") or st.get("volume_tables"):
                 print(f"[*] t+{int(time.time()-t0)}s  keys={st['keys']} "
-                      f"sig_records={st['sig_records']}  opens={st['opens']}")
+                      f"sig_records={st['sig_records']}  opens={st['opens']}  "
+                      f"volumes={st.get('volumes', 0)}")
             if args.timeout and time.time() - t0 > args.timeout:
                 print(f"[*] timeout {args.timeout}s reached")
                 break
@@ -158,16 +172,14 @@ def main():
     stop.set()
     try:
         dump = ex.getdump()
-        with open(os.path.join(args.out, "keydump.json"), "w") as f:
-            json.dump(dump, f, indent=1)
-        for n in ("T1", "T2", "T3", "T4", "rounds"):
-            t = (dump.get("tables") or {}).get(n)
-            if t and t.get("hex"):
-                with open(os.path.join(args.out, f"{n}.bin"), "wb") as f:
-                    f.write(bytes.fromhex(t["hex"]))
+        save_all(dump)
         print(f"[*] saved {args.out}/keydump.json")
         stars = [k for k in dump.get("keys", [])
                  if "DATA1" in (k.get("classification") or "")]
+        vtabs = dump.get("volumes") or []
+        if vtabs:
+            print(f"[*] saved {args.out}/volumes.json — "
+                  f"{len(vtabs)} table(s), {sum(v.get('count', 0) for v in vtabs)} volumes total")
         if stars:
             print("\n===== data1.dat SIGNATURE KEY CAPTURED =====")
             for k in stars:
@@ -175,6 +187,10 @@ def main():
                 print(f"  sig36 = {k.get('sig36_hex')}  mode={k['mode']}  caller={k.get('caller')}")
             print("\nnext: python3 tools/m4_decrypt_data1.py "
                   f"--keydump {args.out}/keydump.json --t1 {args.out}/T1.bin --data1 data1.dat")
+            if vtabs:
+                print("then: python3 tools/m4_extract.py --nty data1.dec.nty "
+                      f"--volumes {args.out}/volumes.json "
+                      f"--t1 {args.out}/T1.bin --key <key32>")
         else:
             print("[!] no DATA1-class key captured yet — play further into the "
                   "game (title screen / data download) and re-run")
