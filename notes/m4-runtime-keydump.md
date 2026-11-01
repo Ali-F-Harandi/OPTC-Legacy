@@ -165,3 +165,59 @@ readVolumeEntry decompile (attribute keys `0x10e` name / `0x111` offset /
 `m4_frida_run.py` saves it as `volumes.json` in the m4_extract-compatible
 shape; the selftest format-locks the pair. A ready-to-run capture kit
 (`optc-m4-capture-kit.zip`) ships the five M4 tools + a Persian runbook.
+
+## 10. Session addendum 2 — APKM re-acquired; capture points verified against a from-scratch rebuild (this session)
+
+The artifact WAS re-acquired: the user supplied four Telegram bot tokens
+(API_ID 21724), and the 134.6 MB `.apkm` was pulled over MTProto from the
+private channel (`t.me/c/3873843444/1885`, message document
+`com_namcobandaigames_spmoja010E_16_2_1_1621_2arch_7dpi_24lang_0.apkm`).
+
+**Acquisition engineering notes** (scripts/tg_download_multi.py pattern):
+4 independent bot sessions × 8 resumable byte-range parts (512 KiB
+requests, append-resume, copy+replace trimming because `os.truncate` is a
+no-op on the sandbox mount), interleaved fallback pass via a known-good
+token, final zip + EOCD + sha256 verification. The channel copy is
+**byte-identical** to the pinned manifest (APKM `c42c893e…57a550`,
+base.apk `b2ba3e50…e38064a`, arm64 split `0795089f…24f329`,
+libgame.so `10e9f1d0…582ff6e1`, lib__7ffe__.so `771d0f27…a2849f`,
+libsigner.so `fb279ea3…30c5736`, data1.dat `2325b9f9…e5e5981`) — the
+APKMirror/XAPK and Telegram lineages converge on the same build.
+
+**Full-chain rebuild from the Telegram artifacts** (fresh `re-work`):
+
+| step | result |
+|---|---|
+| `unpack_7ffe.py` | 7ffe-payload.dec 153,968 B |
+| `m3d0_regen_game_modules.py` | 4 entries, 0 fail, game master-key schedule 60/60 (`6384b59a…d70d58`) |
+| `matryoshka_chain.py` | GAME side → raw_L4_0x9d.bin 32,177,168 B |
+| `m3_decrypt_9d.py` | image 0x446FCC8 B (12,998 ok / 0 fail), patch 0x6A3C4B (2,168 ok / 0 fail) |
+| `m3d0b_merge_9d.py` | merged.bin 71,761,096 B, 288,942 patch applications |
+
+**Capture-point verification** (evidence/m4-telegram-verify.json) — all
+checks PASS against the rebuilt image:
+
+- `keyExpansion@0x39d39f4`: prologue is exactly the documented
+  keylen gate — `sub w8,w2,#4 ; ror w8,w8,#2 ; cmp w8,#7 ; b.hi invalid ;
+  mov w9,#0xab ; lsr w9,w9,w8 ; tbnz w9,#0,valid` (bitmask 0xab ⇒
+  keylens {4,8,16,24,32}), then `adrp/add → 0x1464760` rounds table,
+  `mov w4,w3` (mode passthrough) and a tail `b 0x3fa2710` into the PLT
+  builder — i.e. the dispatcher the M4 analysis predicted, instruction
+  for instruction.
+- `keyExpansionFull@0x39d3a30`: full frame prologue; saves `x21 ← x1`
+  (the key pointer), `w22 ← w4` (mode), `w23 ← w2` (keylen), `w27 ← w3`
+  (rounds); allocates, memcpys the key, and its body materialises
+  **all four sinatra tables** via `adrp x,0x14f7000 ; add #0x375/#0x475/
+  #0x575/#0x675` = T1/T2/T3/T4 at 0x14f7375/0x14f7475/0x14f7575/0x14f7675.
+- `sigInstall@0x39dea94`, `NtyReader::open@0x39dda24`: dense code.
+- T1 (0x14f7375, 256 B) is a true permutation of 0..255 — the RC4-255
+  KSA seed premise of `m4_decrypt_data1.py` holds for this build.
+- On-disk `libgame.so` at every hook VA is all-zero — the 0x9d overlay
+  installs at runtime, so the agent's "wait for the overlay" poll is
+  required and correct, and `imageEnd 0x446FCC8` equals the rebuilt
+  image size exactly.
+
+**Bottom line:** every offset the Frida agent uses is verified against
+the exact Telegram-distributed binary. The only remaining unknown is the
+runtime 32-byte signature itself, which cannot exist offline — the kit is
+ready for the on-device run (`RUNBOOK-fa.md`).

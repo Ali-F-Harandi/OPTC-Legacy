@@ -1,0 +1,166 @@
+{
+ "title": "M4 Telegram-APKM verification \u2014 capture points vs rebuilt 0x9d image",
+ "apkm_sha256": "c42c893e9677cd3490646b02e2266c398e629efdf50371b0701d51416857a550",
+ "rebuilt_from": "Telegram channel upload (byte-identical to pinned hashes.txt)",
+ "chain_rerun": {
+  "unpack_7ffe": "7ffe-payload.dec 153968 B",
+  "m3d0_regen_game_modules": "4 entries, 0 fail, master-key schedule 60/60",
+  "matryoshka_chain": "GAME side to raw_L4_0x9d.bin (32177168 B)",
+  "m3_decrypt_9d": "image 0x446fcc8 B (12998 ok / 0 fail), patch 0x6a3c4b (2168 ok / 0 fail)",
+  "m3d0b_merge_9d": "merged.bin 71761096 B, 288942 patch applications"
+ },
+ "capture_points": {
+  "keyExpansion@0x39d39f4": "48100051080988131f1d007188000054",
+  "keyExpansionFull@0x39d3a30": "fd7bbaa9fc6f01a9fa6702a9f85f03a9",
+  "sigInstall@0x39dea94": "ff0303d1e82b00fdfd7b06a9fc6f07a9",
+  "ntyOpen@0x39dda24": "fd7bbda9f65701a9f44f02a9fd030091"
+ },
+ "tables": {
+  "T1@0x14f7375_is_perm_0_255": true,
+  "T1_sha256_note": "first32=42153b308f475ff708d9b7915434ba0ab42bc4be02701fb0d177f5df1712b646",
+  "rounds@0x1464760": "0400000008000000040000000a000000040000000c000000"
+ },
+ "ondisk_libgame_overlay_zero": {
+  "keyExpansion": true,
+  "sigInstall": true,
+  "ntyOpen": true,
+  "note": "on-disk .so is zero at all hook VAs \u2014 overlay installs at runtime"
+ },
+ "keyExpansion_disasm_head": [
+  {
+   "addr": "0x39d39f4",
+   "mnemonic": "sub",
+   "op_str": "w8, w2, #4"
+  },
+  {
+   "addr": "0x39d39f8",
+   "mnemonic": "ror",
+   "op_str": "w8, w8, #2"
+  },
+  {
+   "addr": "0x39d39fc",
+   "mnemonic": "cmp",
+   "op_str": "w8, #7"
+  },
+  {
+   "addr": "0x39d3a00",
+   "mnemonic": "b.hi",
+   "op_str": "#0x39d3a10"
+  },
+  {
+   "addr": "0x39d3a04",
+   "mnemonic": "mov",
+   "op_str": "w9, #0xab"
+  },
+  {
+   "addr": "0x39d3a08",
+   "mnemonic": "lsr",
+   "op_str": "w9, w9, w8"
+  },
+  {
+   "addr": "0x39d3a0c",
+   "mnemonic": "tbnz",
+   "op_str": "w9, #0, #0x39d3a1c"
+  },
+  {
+   "addr": "0x39d3a10",
+   "mnemonic": "mov",
+   "op_str": "w0, #4"
+  },
+  {
+   "addr": "0x39d3a14",
+   "mnemonic": "movk",
+   "op_str": "w0, #0x8000, lsl #16"
+  },
+  {
+   "addr": "0x39d3a18",
+   "mnemonic": "ret",
+   "op_str": ""
+  },
+  {
+   "addr": "0x39d3a1c",
+   "mnemonic": "adrp",
+   "op_str": "x9, #0x1464000"
+  },
+  {
+   "addr": "0x39d3a20",
+   "mnemonic": "add",
+   "op_str": "x9, x9, #0x760"
+  },
+  {
+   "addr": "0x39d3a24",
+   "mnemonic": "mov",
+   "op_str": "w4, w3"
+  },
+  {
+   "addr": "0x39d3a28",
+   "mnemonic": "ldr",
+   "op_str": "w3, [x9, w8, uxtw #2]"
+  },
+  {
+   "addr": "0x39d3a2c",
+   "mnemonic": "b",
+   "op_str": "#0x3fa2710"
+  },
+  {
+   "addr": "0x39d3a30",
+   "mnemonic": "stp",
+   "op_str": "x29, x30, [sp, #-0x60]!"
+  },
+  {
+   "addr": "0x39d3a34",
+   "mnemonic": "stp",
+   "op_str": "x28, x27, [sp, #0x10]"
+  },
+  {
+   "addr": "0x39d3a38",
+   "mnemonic": "stp",
+   "op_str": "x26, x25, [sp, #0x20]"
+  },
+  {
+   "addr": "0x39d3a3c",
+   "mnemonic": "stp",
+   "op_str": "x24, x23, [sp, #0x30]"
+  },
+  {
+   "addr": "0x39d3a40",
+   "mnemonic": "stp",
+   "op_str": "x22, x21, [sp, #0x40]"
+  },
+  {
+   "addr": "0x39d3a44",
+   "mnemonic": "stp",
+   "op_str": "x20, x19, [sp, #0x50]"
+  },
+  {
+   "addr": "0x39d3a48",
+   "mnemonic": "mov",
+   "op_str": "x29, sp"
+  },
+  {
+   "addr": "0x39d3a4c",
+   "mnemonic": "mov",
+   "op_str": "x21, x1"
+  },
+  {
+   "addr": "0x39d3a50",
+   "mnemonic": "mov",
+   "op_str": "x19, x0"
+  }
+ ],
+ "keyExpansion_signature_checks": {
+  "w2_keylen_dispatch_sub_ror_bitmask": true,
+  "keylen_bitmask_0xab": true,
+  "w3_mode_passthrough_mov_w4": true,
+  "rounds_table_ref_0x1464760": true,
+  "T1_ref_0x14f7375": true,
+  "T2_ref_0x14f7475": true,
+  "T3_ref_0x14f7575": true,
+  "T4_ref_0x14f7675": true,
+  "key_ptr_x1_saved": true,
+  "dispatcher_tail_jump": true
+ },
+ "data1_dat_sha256": "2325b9f9310f27fdce1be44c88233d66f31795cfd2a413744733b5a8795e5981",
+ "selftest": "ALL PASS (synthetic round-trip incl. embedded-record sweep + volumes.json extractor path)",
+ "verdict": "Every M4 agent offset is valid for the Telegram APKM build; the capture kit is ready for the on-device run."
+}
