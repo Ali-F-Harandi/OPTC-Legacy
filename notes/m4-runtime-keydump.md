@@ -221,3 +221,39 @@ checks PASS against the rebuilt image:
 the exact Telegram-distributed binary. The only remaining unknown is the
 runtime 32-byte signature itself, which cannot exist offline — the kit is
 ready for the on-device run (`RUNBOOK-fa.md`).
+
+## 11. Session-3 addendum — the real file closes the static question (keysweep)
+
+The APKM was re-acquired (Telegram MTProto, 134.6 MB, all five sha256 in
+`hashes.txt` match bit-exactly), and for the first time the M4 pipeline ran
+against the **real** `assets/7ffe/data1.dat`:
+
+* **No embedded record.** A targeted structure scan
+  (`tools/m4b_data1_structure_scan.py`,
+  `evidence/m4b-session3-keysweep.json`) found no offset R where
+  `len@R+0x28 == filesize-R-0x34` (LE or BE), no trailer record, no stored
+  u32 matching any plausible file/payload length, no single-byte-XOR `MM`.
+  The file is **payload-only** — the record (id, sig36, len, crc32) is
+  assembled by the caller at runtime, which is why the self-keyed sweep
+  (`--sweep` with the real T1 from `merged_0x9d.bin[0x14f7375:0x14f7475]`)
+  is negative on the real file.
+* **Binary window sweep — negative.** The one static gap left after M3d
+  (which only tested ASCII *strings*) was a raw 32-byte key hidden as a
+  byte array. `tools/m4b_binary_keysweep.c` (OpenMP, positive-control
+  verified against the Python core) slid a 1-byte-stride window over every
+  static source — 6 DEX files, resources.arsc, all assets, both arches of
+  libgame.so / lib__7ffe__.so / libsigner.so, the decrypted protector
+  modules, and the restored 71.6 MB engine image: **455,110,212 windows ×
+  5 payload offsets × corrected MM oracle → 0 hits.**
+* **Conclusion (now proven, not assumed):** the 32-byte signature is
+  runtime-issued (APU table / JNI / server) and exists nowhere in the
+  shipped APK. The Frida capture is the *only* path, exactly as designed.
+* **Tooling consequences:** `m4_decrypt_data1.py` defaults to payload
+  offset 0 (payload-only file) and auto-tries {0, 4, 0x34} with
+  `--keydump`/`--sweep`; the record-head printout is kept only as a hint.
+* **Agent validation on the real binary:** the shipped arm64 libgame.so
+  has VA==file-offset for the first PT_LOAD, and the 16 bytes at
+  0x39d39f4 are **zero** (protector-blanked) while
+  `merged_0x9d.bin[0x39d39f4:]` carries live code — the agent's
+  wait-for-overlay poll is exact. `OFF.imageEnd 0x446fcc8` equals the
+  merged image size to the byte.

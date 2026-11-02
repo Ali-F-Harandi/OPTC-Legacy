@@ -24,8 +24,24 @@ offset 0x14f7375 in the regenerated workspace.)
 
 Sweep mode (--sweep) additionally tries every statically-derivable key
 candidate (the embedded record signature itself, head windows) against the
-payload offsets {0x34, 4, 0} with the corrected 'MM' oracle — this covers
+payload offsets {0, 4, 0x34} with the corrected 'MM' oracle — this covers
 the "self-keyed record" hypothesis that the M3d matrix never tested.
+
+Session-3 evidence (the real 16.2.1 file, 181,700 B / sha256 2325b9f9…):
+  * NO embedded record exists — no offset R satisfies len@R+0x28 ==
+    filesize-R-0x34 (LE or BE), and no stored u32 equals any plausible
+    payload/file length. The record (and therefore the key) is fully
+    external, assembled by the caller at runtime.
+  * The self-keyed sweep over the real file is NEGATIVE (as the M3d bias
+evidence predicted), and a 455,110,212-window binary sweep over every
+    static source (6 DEX files, resources.arsc, assets, both arches of
+    libgame/lib__7ffe__/libsigner, the decrypted protector modules, the
+    restored 71.6 MB engine image) found ZERO keys — the 32-byte signature
+    is runtime-issued (APU table / JNI / server), confirming the Frida
+    capture as the only path.
+  * Consequence: the FILE is payload-only, so the default payload offset
+    is now 0; offsets 4 and 0x34 remain as fallbacks (auto-tried when a
+    keydump or --sweep is used).
 
 After decryption, feed the output to the existing parse harness:
   python3 tools/m3d_emu_nty_full.py data1.dec.nty
@@ -193,8 +209,9 @@ def main():
     ap.add_argument("--keydump", default=None, help="optc_dump/keydump.json from the Frida runner")
     ap.add_argument("--t1", default=None, help="T1 table: file path (T1.bin) or 512-hex-chars")
     ap.add_argument("--out", default=None, help="output plaintext NTY (default <data1>.dec.nty)")
-    ap.add_argument("--payload-off", type=lambda x: int(x, 0), default=REC_OFF,
-                    help="payload start offset (default 0x34)")
+    ap.add_argument("--payload-off", type=lambda x: int(x, 0), default=0,
+                    help="payload start offset (default 0 — the file is "
+                         "payload-only; 4/0x34 auto-tried with --keydump/--sweep)")
     ap.add_argument("--sweep", action="store_true",
                     help="also try embedded/static key candidates x offsets {0x34,4,0}")
     ap.add_argument("--report", default=None, help="write a JSON report")
@@ -256,7 +273,11 @@ def main():
             seen.add(c["key"].hex())
             uniq.append(c)
 
-    offsets = [args.payload_off] + ([4, 0] if args.sweep else [])
+    offsets = [args.payload_off]
+    if args.sweep or args.keydump:
+        # session-3: no embedded record in the real file -> payload-only;
+        # still cover the record-prepended layouts as fallback
+        offsets += [0, 4, REC_OFF]
     offsets = sorted(set(o for o in offsets if 0 <= o < len(data1)))
 
     results, winner = [], None

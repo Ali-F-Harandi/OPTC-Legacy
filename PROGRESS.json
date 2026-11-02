@@ -61,9 +61,9 @@
   {
    "id": "asset-formats",
    "name": "Asset formats & pipelines",
-   "done": 90,
+   "done": 92,
    "weight": 12,
-   "note": "NTY container decoded (MM magic, volume entries, gzip flag); encrypted-NTY key-record mechanism reversed; cache write path mapped end-to-end; M4 runtime-capture toolchain (Frida hook + offline decryptor/extractor) built and round-trip verified — awaiting the on-device 32-byte signature"
+   "note": "NTY container decoded (MM magic, volume entries, gzip flag); encrypted-NTY key-record mechanism reversed; M4 runtime-capture toolchain built, self-tested AND run against the real file: no embedded record (payload-only), self-keyed sweep negative, 455M-window binary sweep over all APK sources negative \u2014 the 32-byte signature is proven runtime-issued; awaiting the on-device capture"
   },
   {
    "id": "build-android",
@@ -91,7 +91,7 @@
    "name": "Tooling & CI",
    "done": 75,
    "weight": 6,
-   "note": "7-layer chain + 0x9d restore + PLT map + RTTI + Unicorn harnesses (crypto cores AND full NTY parse w/ mini-libc); Ghidra headless pipeline committed"
+   "note": "7-layer chain + 0x9d restore + PLT map + RTTI + Unicorn harnesses (crypto cores AND full NTY parse w/ mini-libc) + M4 Frida capture kit + C binary keysweeper (455M windows, OpenMP)"
   },
   {
    "id": "docs",

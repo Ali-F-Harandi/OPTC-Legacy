@@ -1,0 +1,54 @@
+{
+ "session": "M4b session-3 (real APK re-acquired via Telegram MTProto)",
+ "artifact": {
+  "apkm": "com_namacobandaigames_spmoja010E_16_2_1_1621_2arch_7dpi_24lang_0.apkm",
+  "sha256": "c42c893e9677cd3490646b02e2266c398e629efdf50371b0701d51416857a550",
+  "size": 141166735,
+  "hashes_match_repo": true
+ },
+ "data1_real": {
+  "size": 181700,
+  "sha256": "2325b9f9310f27fdce1be44c88233d66f31795cfd2a413744733b5a8795e5981",
+  "structure_scan": {
+   "embedded_record_len_consistency": "NONE (no offset R in [0,64K) has len@R+0x28 == filesize-R-0x34, LE or BE)",
+   "trailer_record": "NONE",
+   "length_constants_anywhere": "NONE (no u32 equals filesize, filesize-0x34, filesize-4, filesize-0x40)",
+   "single_byte_xor_mm": "NONE",
+   "crc_matches": false
+  },
+  "self_keyed_sweep": "NEGATIVE (embedded sig/head windows x offsets {0,4,0x34} x corrected MM oracle)",
+  "conclusion": "file is payload-only; the key record is assembled by the caller at runtime"
+ },
+ "binary_keysweep": {
+  "tool": "tools/m4b_binary_keysweep.c (gcc -O2 -fopenmp)",
+  "t1_source": "merged_0x9d.bin[0x14f7375:0x14f7475] (sha256 of T1: e9ce9b0d39fd7c557c3208f0ddecea65c9cb5e1e529c93c32e1ee6ca3d770b7d)",
+  "positive_control": "PASS (planted key recovered, FULL PASS oracle)",
+  "sources": [
+   "6 DEX files (18.3 MB)",
+   "resources.arsc",
+   "all base.apk assets (RES_OPENING.DAT.00-.26, .idx, .vb, data1.dat, ...)",
+   "libgame.so arm64 + armv7 (shipped, blanked)",
+   "lib__7ffe__.so both arches",
+   "libsigner.so both arches",
+   "decrypted protector modules (f3/e2 matryoshka merged images)",
+   "restored engine image merged_0x9d.bin (71.6 MB)",
+   "game-stage2.dec"
+  ],
+  "windows_tested": 455110212,
+  "payload_offsets": [
+   0,
+   4,
+   8,
+   16,
+   52
+  ],
+  "oracle": "pt[0:4]=='MM\\x00\\x2a' and 1<=u16be(pt+8)<=0x100",
+  "hits": 0,
+  "conclusion": "the 32-byte data1.dat signature exists nowhere in the shipped APK (neither as ASCII string nor as raw binary window); it is runtime-issued (APU table / JNI / server)"
+ },
+ "agent_validation_on_real_binary": {
+  "shipped_libgame_so": "PT_LOAD vaddr=0 covers VA 0x39d39f4 at file offset 0x39d39f4: 16 ZERO bytes (blanked) \u2014 poll() wait-for-overlay logic valid",
+  "restored_image": "merged_0x9d.bin[0x39d39f4:..] = 4810005108098813... (live code)",
+  "image_end": "0x446fcc8 == merged_0x9d.bin size (71,761,096) exact"
+ }
+}
