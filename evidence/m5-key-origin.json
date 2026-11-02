@@ -1,0 +1,69 @@
+{
+ "evidence_id": "ev_m5_key_origin",
+ "milestone": "M5",
+ "artifact_verification": {
+  "apkm_sha256": "c42c893e9677cd3490646b02e2266c398e629efdf50371b0701d51416857a550",
+  "checks": [
+   "APKM",
+   "base.apk",
+   "arm64_split",
+   "libgame.so",
+   "lib__7ffe__.so",
+   "libsigner.so",
+   "data1.dat"
+  ],
+  "result": "all 7 match hashes.txt"
+ },
+ "global_key_provisioning": {
+  "function": "0x1ce44bc",
+  "class": "ResourceController (vtable 0x4187ad8, typeinfo 0x4117870)",
+  "vtable_slot": "+0x00",
+  "kv_store_read_method": "0x3b1bbe0",
+  "kv_keys_read": [
+   "session_id",
+   "bq159_key",
+   "current",
+   "gdpr_terms",
+   "gdpr_displayable"
+  ],
+  "key_construction": "keyExpansion(out=obj+8, key=<store value>, keylen=strlen, mode=0xE0000000) -> this+0xc0",
+  "server_flow": [
+   "/users/register",
+   "/users/sessions",
+   "/users/token",
+   "/user_infos/",
+   "/store_infos"
+  ],
+  "api_host": "https://app.gb.onepiece-tc.jp",
+  "store_version_tag": "v15.0.0_sent_store_info"
+ },
+ "per_volume_records": {
+  "record_map": "obj+0x320 (ctx 0x858 B, ctor 0x3a08cac)",
+  "loader": "0x3a090d4 -> cache path <root>/<ver>/<name>.vbx via 0x39f3e90 singleton",
+  "consumers": [
+   "ntyOpenCaller1 0x3a07d78",
+   "ntyOpenCaller2 0x3a089d0"
+  ],
+  "vb_entry_format": {
+   "count": "u32",
+   "name": "char[36] UUID",
+   "blob_size": "u32 == filesize-0x34",
+   "id": "u32",
+   "C": "u32",
+   "blob": "bytes"
+  },
+  "shipped_vb_assets": [
+   "RES.DAT.vb",
+   "FONT.DAT.vb",
+   "RES_LOADING.DAT.vb",
+   "RES_OPENING.DAT.vb",
+   "RES_FILLINSPACE.DAT.vb"
+  ],
+  "data1_vb_in_apk": false
+ },
+ "negative_results": [
+  "raw .vb 32B windows x {c159,c144,rc4} x {0xE0000000,0x40000000} x {0,4,0x34} vs RES.DAT.01/FONT.DAT.01: 0 hits",
+  "RC4-255 + 4 embedded keys over .vb blobs: no structure"
+ ],
+ "core_convention_proof": "holder ptr (desc+8 pointee) as arg1 \u2014 Python-vs-emulated match on 64B synthetic vector"
+}
